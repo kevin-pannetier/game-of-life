@@ -1,0 +1,10 @@
+{
+  "name": "Blinker",
+  "type": "oscillator",
+  "period": 2,
+  "grid": [
+    [{"alive": false}, {"alive": true}, {"alive": false}],
+    [{"alive": false}, {"alive": true}, {"alive": false}],
+    [{"alive": false}, {"alive": true}, {"alive": false}]
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Glider",
+  "type": "spaceship",
+  "period": 4,
+  "grid": [
+    [{"alive": false}, {"alive": true}, {"alive": false}],
+    [{"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": true}, {"alive": true}, {"alive": true}]
+  ]
+}

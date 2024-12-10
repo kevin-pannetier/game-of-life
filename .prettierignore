@@ -1,0 +1,10 @@
+# Ignore artifacts:
+build
+coverage
+dist
+node_modules
+storybook-static
+
+# Ignore files:
+*.log
+.DS_Store

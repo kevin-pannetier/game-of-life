@@ -1,0 +1,11 @@
+{
+  "name": "Beacon",
+  "type": "oscillator",
+  "period": 2,
+  "grid": [
+    [{"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}],
+    [{"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}],
+    [{"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}],
+    [{"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Pulsar",
+  "type": "oscillator",
+  "period": 3,
+  "grid": [
+    [{"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}],
+    [{"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}],
+    [{"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}],
+    [{"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}],
+    [{"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}],
+    [{"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": false}],
+    [{"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}, {"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}, {"alive": false}]
+  ]
+}

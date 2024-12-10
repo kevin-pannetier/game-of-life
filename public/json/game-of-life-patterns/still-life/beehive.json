@@ -1,0 +1,10 @@
+{
+  "name": "Beehive",
+  "type": "still life",
+  "period": 1,
+  "grid": [
+    [{"alive": false}, {"alive": true}, {"alive": true}, {"alive": false}],
+    [{"alive": true}, {"alive": false}, {"alive": false}, {"alive": true}],
+    [{"alive": false}, {"alive": true}, {"alive": true}, {"alive": false}]
+  ]
+}

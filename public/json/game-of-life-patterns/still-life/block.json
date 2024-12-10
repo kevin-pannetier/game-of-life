@@ -1,0 +1,9 @@
+{
+  "name": "Block",
+  "type": "still life",
+  "period": 1,
+  "grid": [
+    [{"alive": true}, {"alive": true}],
+    [{"alive": true}, {"alive": true}]
+  ]
+}
