@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import Button from '../Button/Button';
 
 export type ButtonGroupProps = {
   options: string[];
   defaultValue?: string;
+  value?: string; // Controlled value
   onChange?: (value: string) => void;
   className?: string;
   size?: 'small' | 'medium' | 'large';
@@ -15,18 +16,26 @@ export type ButtonGroupProps = {
 const ButtonGroup = ({
   options,
   defaultValue,
+  value,
   onChange,
   className,
-  size,
-  disabled,
+  size = 'medium',
+  disabled = false,
   variant = 'secondary',
 }: ButtonGroupProps) => {
-  const [activeButton, setActiveButton] = useState(defaultValue || options[0]);
+  const [activeButton, setActiveButton] = useState(defaultValue || value || options[0]);
 
-  const handleButtonClick = (value: string) => {
-    setActiveButton(value);
+  // Sync internal state with `value` prop
+  useEffect(() => {
+    if (value) {
+      setActiveButton(value);
+    }
+  }, [value]);
+
+  const handleButtonClick = (option: string) => {
+    setActiveButton(option);
     if (onChange) {
-      onChange(value);
+      onChange(option);
     }
   };
 
