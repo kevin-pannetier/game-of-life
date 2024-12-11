@@ -1,7 +1,7 @@
+import { useEffect, useState } from 'react';
 import Button from '../../ui/Button/Button';
 import { PlayIcon, PauseIcon, DownloadIcon, UploadIcon, TrashIcon } from '@radix-ui/react-icons';
 import ImportGridDialog from '../ImportGridDialog/ImportGridDialog';
-import { useState } from 'react';
 import { GridType } from '../Grid/types';
 import Icon from '../../ui/Icon/Icon';
 import ButtonGroup from '../../ui/ButtonGroup/ButtonGroup';
@@ -32,6 +32,21 @@ export const Controls = ({
     { value: 500, label: 'Fast' },
     { value: 100, label: 'Maximum' },
   ];
+
+  // Spacebar event listener
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Prevent page scrolling
+        onTogglePlay();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [onTogglePlay]);
 
   return (
     <div className="bg-zinc-950 text-white py-2 fixed bottom-0 left-0 right-0">
@@ -71,7 +86,7 @@ export const Controls = ({
           </Button>
         </div>
 
-        {/* Export and Import Buttons */}
+        {/* Export, Import, and Clean Buttons */}
         <div className="flex items-center gap-4">
           <Button
             size="small"
