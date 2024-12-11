@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test.describe('Game of Life', () => {
-  let page;
+  let page: Page;
 
   test.beforeEach(async ({ browser }) => {
     page = await browser.newPage();
@@ -66,12 +66,12 @@ async function setupGrid(page, sizeSelectTestId, optionTestId) {
   await option.click();
 }
 
-async function startGame(page) {
+async function startGame(page: Page) {
   const startGameButton = page.getByTestId('start-game-button');
   await startGameButton.click();
 }
 
-async function verifyGridSize(page, gridTestId, expectedCount) {
+async function verifyGridSize(page: Page, gridTestId: string, expectedCount: number) {
   const grid = page.getByTestId(gridTestId);
   await expect(grid).toBeVisible();
 
@@ -79,7 +79,7 @@ async function verifyGridSize(page, gridTestId, expectedCount) {
   await expect(cells).toHaveCount(expectedCount);
 }
 
-async function toggleCell(page, cellTestId) {
+async function toggleCell(page: Page, cellTestId: string) {
   const cell = page.getByTestId(cellTestId);
   await cell.click();
   await expect(cell).toHaveAttribute('data-alive', 'true');
@@ -88,45 +88,45 @@ async function toggleCell(page, cellTestId) {
   await expect(cell).toHaveAttribute('data-alive', 'false');
 }
 
-async function activateCell(page, cellTestId) {
+async function activateCell(page: Page, cellTestId: string) {
   await page.getByTestId(cellTestId).click();
 }
 
-async function runNextGeneration(page) {
+async function runNextGeneration(page: Page) {
   const playButton = page.getByTestId('play-button');
   await playButton.click();
   await page.waitForTimeout(600);
 }
 
-async function verifyDeadCell(page, cellTestId) {
+async function verifyDeadCell(page: Page, cellTestId: string) {
   await expect(page.getByTestId(cellTestId)).toHaveAttribute('data-alive', 'false');
 }
 
-async function createStableBlock(page) {
+async function createStableBlock(page: Page) {
   await page.getByTestId('cell-1-1').click();
   await page.getByTestId('cell-1-2').click();
   await page.getByTestId('cell-2-1').click();
   await page.getByTestId('cell-2-2').click();
 }
 
-async function verifyStableBlock(page) {
+async function verifyStableBlock(page: Page) {
   await expect(page.getByTestId('cell-1-1')).toHaveAttribute('data-alive', 'true');
   await expect(page.getByTestId('cell-1-2')).toHaveAttribute('data-alive', 'true');
   await expect(page.getByTestId('cell-2-1')).toHaveAttribute('data-alive', 'true');
   await expect(page.getByTestId('cell-2-2')).toHaveAttribute('data-alive', 'true');
 }
 
-async function createLShape(page) {
+async function createLShape(page: Page) {
   await page.getByTestId('cell-1-1').click();
   await page.getByTestId('cell-1-2').click();
   await page.getByTestId('cell-2-1').click();
 }
 
-async function verifyNewCell(page, cellTestId) {
+async function verifyNewCell(page: Page, cellTestId: string) {
   await expect(page.getByTestId(cellTestId)).toHaveAttribute('data-alive', 'true');
 }
 
-async function createOvercrowdedCell(page) {
+async function createOvercrowdedCell(page: Page) {
   await page.getByTestId('cell-0-1').click();
   await page.getByTestId('cell-1-0').click();
   await page.getByTestId('cell-1-1').click();
@@ -134,7 +134,7 @@ async function createOvercrowdedCell(page) {
   await page.getByTestId('cell-2-1').click();
 }
 
-async function exportGrid(page) {
+async function exportGrid(page: Page) {
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Export grid to JSON' }).click(),
@@ -155,7 +155,7 @@ async function exportGrid(page) {
   expect(Array.isArray(parsedContent.grid)).toBe(true);
 }
 
-async function importGrid(page, __dirname) {
+async function importGrid(page: Page, __dirname: string) {
   const importButton = page.getByRole('button', { name: 'Import grid from JSON' });
   await importButton.click();
 
