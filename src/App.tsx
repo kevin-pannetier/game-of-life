@@ -66,9 +66,10 @@ export const App = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
+      <div className="p-8">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
           <h1 className="text-3xl font-bold">Game of Life</h1>
           <Button
             variant="outline"
@@ -78,19 +79,15 @@ export const App = () => {
             New Game
           </Button>
         </div>
+      </div>
 
-        <NewGameDialog open={dialogOpen} onOpenChange={setDialogOpen} onStart={handleNewGame} />
+      <NewGameDialog open={dialogOpen} onOpenChange={setDialogOpen} onStart={handleNewGame} />
 
-        {gridSize && (
-          <>
-            <Controls
-              isPlaying={isPlaying}
-              onTogglePlay={togglePlay}
-              onSpeedChange={handleSpeedChange}
-              speed={speed}
-            />
-
-            <div className="mt-8 bg-white p-8 rounded-lg shadow-lg overflow-auto">
+      {gridSize && (
+        <>
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col items-center px-8 mb-20">
+            <div className="w-full max-w-6xl ">
               <Grid
                 grid={grid}
                 onCellClick={handleCellClick}
@@ -98,9 +95,21 @@ export const App = () => {
                 onInteractionStart={handleGridInteraction}
               />
             </div>
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Fixed Controls Bar at Bottom */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+            <div className="max-w-6xl mx-auto p-4">
+              <Controls
+                isPlaying={isPlaying}
+                onTogglePlay={togglePlay}
+                onSpeedChange={handleSpeedChange}
+                speed={speed}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
