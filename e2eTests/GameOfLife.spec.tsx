@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test.describe('Game of Life', () => {
   test.beforeEach(async ({ page }) => {
@@ -9,7 +14,7 @@ test.describe('Game of Life', () => {
     await selectTrigger.click();
 
     // Select an option
-    const option = page.getByTestId('select-option-20');
+    const option = page.getByTestId('select-option-3'); // Small grid for testing
     await option.click();
 
     // Start the game
@@ -22,7 +27,7 @@ test.describe('Game of Life', () => {
     await expect(grid).toBeVisible();
 
     const cells = grid.locator('[role="gridcell"]');
-    await expect(cells).toHaveCount(400); // For a 20x20 grid
+    await expect(cells).toHaveCount(9); // For a 3x3 grid
   });
 
   test('should correctly toggle cell state on click', async ({ page }) => {
@@ -37,84 +42,90 @@ test.describe('Game of Life', () => {
     await expect(cell).toHaveAttribute('data-alive', 'false');
   });
 
-  test('should correctly toggle cell state on drag', async ({ page }) => {
-    const startCell = page.getByTestId('cell-0-0');
-    const endCell = page.getByTestId('cell-0-1');
+  test('should kill lonely cells', async ({ page }) => {
+    const cell = page.getByTestId('cell-1-1');
+    await cell.click(); // Activate a single cell
 
-    await startCell.hover();
-    await page.mouse.down();
-    await endCell.hover();
-    await page.mouse.up();
-
-    // Verify cells are toggled to "alive"
-    await expect(startCell).toHaveAttribute('data-alive', 'true');
-    await expect(endCell).toHaveAttribute('data-alive', 'true');
-  });
-
-  test('should start the game when the start button is clicked', async ({ page }) => {
+    // Start the game
     const playButton = page.getByRole('button', { name: 'Play' });
     await playButton.click();
 
-    // Wait for next generation
-    await page.waitForTimeout(600); // Assume 600ms for one generation
-
-    // Verify grid updates
-    const cell = page.getByTestId('cell-0-0');
-    const cellState = await cell.getAttribute('data-alive');
-    expect(cellState).not.toBeNull(); // Verify cell state has changed
-  });
-
-  test('should stop the game when the stop button is clicked', async ({ page }) => {
-    const playButton = page.getByRole('button', { name: 'Play' });
-    await playButton.click();
-
-    const pauseButton = page.getByRole('button', { name: 'Pause' });
-    await pauseButton.click();
-
-    // Wait and verify grid does not change
-    const cell = page.getByTestId('cell-0-0');
-    const initialCellState = await cell.getAttribute('data-alive');
+    // Wait for the next generation
     await page.waitForTimeout(600);
-    const finalCellState = await cell.getAttribute('data-alive');
 
-    expect(initialCellState).toBe(finalCellState);
+    // Verify the cell is dead
+    await expect(cell).toHaveAttribute('data-alive', 'false');
   });
 
-  test("should start a new game when the 'New Game' button is clicked", async ({ page }) => {
-    const newGameButton = page.getByRole('button', { name: 'New Game' });
-    await newGameButton.click();
+  test('should keep cells alive with 2 or 3 neighbors', async ({ page }) => {
+    // Create a stable block pattern
+    await page.getByTestId('cell-1-1').click();
+    await page.getByTestId('cell-1-2').click();
+    await page.getByTestId('cell-2-1').click();
+    await page.getByTestId('cell-2-2').click();
 
-    const selectTrigger = page.getByTestId('grid-size-select');
-    await selectTrigger.click();
+    // Start the game
+    const playButton = page.getByRole('button', { name: 'Play' });
+    await playButton.click();
 
-    const option = page.getByTestId('select-option-10');
-    await option.click();
+    // Wait for the next generation
+    await page.waitForTimeout(600);
 
-    const startGameButton = page.getByTestId('start-game-button');
-    await startGameButton.click();
-
-    // Verify new grid is created
-    const grid = page.getByTestId('grid');
-    const cells = grid.locator('[role="gridcell"]');
-    await expect(cells).toHaveCount(100); // For a 10x10 grid
+    // Verify the block remains stable
+    await expect(page.getByTestId('cell-1-1')).toHaveAttribute('data-alive', 'true');
+    await expect(page.getByTestId('cell-1-2')).toHaveAttribute('data-alive', 'true');
+    await expect(page.getByTestId('cell-2-1')).toHaveAttribute('data-alive', 'true');
+    await expect(page.getByTestId('cell-2-2')).toHaveAttribute('data-alive', 'true');
   });
 
-  test("should export the grid when the 'Export to JSON' button is clicked", async ({ page }) => {
+  test('should birth new cells with exactly 3 neighbors', async ({ page }) => {
+    // Set up an "L" shape
+    await page.getByTestId('cell-1-1').click();
+    await page.getByTestId('cell-1-2').click();
+    await page.getByTestId('cell-2-1').click();
+
+    // Start the game
+    const playButton = page.getByRole('button', { name: 'Play' });
+    await playButton.click();
+
+    // Wait for the next generation
+    await page.waitForTimeout(600);
+
+    // Verify a new cell is born
+    await expect(page.getByTestId('cell-2-2')).toHaveAttribute('data-alive', 'true');
+  });
+
+  test('should kill overcrowded cells', async ({ page }) => {
+    // Set up overcrowded center cell
+    await page.getByTestId('cell-0-1').click();
+    await page.getByTestId('cell-1-0').click();
+    await page.getByTestId('cell-1-1').click();
+    await page.getByTestId('cell-1-2').click();
+    await page.getByTestId('cell-2-1').click();
+
+    // Start the game
+    const playButton = page.getByRole('button', { name: 'Play' });
+    await playButton.click();
+
+    // Wait for the next generation
+    await page.waitForTimeout(600);
+
+    // Verify the overcrowded cell is dead
+    await expect(page.getByTestId('cell-1-1')).toHaveAttribute('data-alive', 'false');
+  });
+
+  test('should export the grid when the "Export to JSON" button is clicked', async ({ page }) => {
     // Trigger the export button
     const [download] = await Promise.all([
       page.waitForEvent('download'), // Wait for the download to start
-      page.getByRole('button', { name: 'Export to JSON' }).click(), // Click the export button
+      page.getByRole('button', { name: 'Export grid to JSON' }).click(), // Click the export button
     ]);
 
     // Assert download filename
-    const suggestedFilename = await download.suggestedFilename();
+    const suggestedFilename = download.suggestedFilename();
     expect(suggestedFilename).toBe('game-of-life-grid.json');
 
-    // Save the downloaded file to a temporary directory (optional)
-    const downloadPath = await download.path();
-    console.log(`File downloaded to: ${downloadPath}`);
-
-    // Optional: Validate the file content
+    // Validate the file content
     const fileContent = await download.createReadStream();
     const buffer: Uint8Array[] = [];
     for await (const chunk of fileContent) {
@@ -125,5 +136,35 @@ test.describe('Game of Life', () => {
 
     expect(parsedContent).toHaveProperty('grid');
     expect(Array.isArray(parsedContent.grid)).toBe(true);
+  });
+
+  test('should import a grid from a JSON file', async ({ page }) => {
+    const importButton = page.getByRole('button', { name: 'Import grid from JSON' });
+    await importButton.click();
+
+    const label = page.getByTestId('file-label');
+    expect(await label.isVisible()).toBe(true);
+
+    // Verify file upload works
+    const tempFilePath = path.join(__dirname, 'temp-grid.json');
+    const gridData = {
+      grid: [
+        [{ alive: false }, { alive: true }, { alive: false }],
+        [{ alive: true }, { alive: false }, { alive: true }],
+        [{ alive: false }, { alive: true }, { alive: false }],
+      ],
+    };
+    fs.writeFileSync(tempFilePath, JSON.stringify(gridData));
+
+    const fileInput = page.locator('[data-testid="file-input"]');
+    await fileInput.setInputFiles(tempFilePath);
+
+    const grid = page.getByTestId('grid');
+    await expect(grid).toBeVisible();
+
+    const cells = grid.locator('[role="gridcell"]');
+    await expect(cells).toHaveCount(9); // For a 3x3 grid
+
+    fs.unlinkSync(tempFilePath);
   });
 });

@@ -1,5 +1,9 @@
 import Button from '../../ui/Button/Button';
 import { PlayIcon, PauseIcon } from '@radix-ui/react-icons';
+import ImportGridDialog from '../ImportGridDialog/ImportGridDialog';
+import { useState } from 'react';
+import Icon from '../../ui/Icon/Icon';
+import { GridType } from '../Grid/types';
 
 export type ControlsProps = {
   isPlaying: boolean;
@@ -7,6 +11,7 @@ export type ControlsProps = {
   speed: number;
   onSpeedChange: (speed: number) => void;
   onExport: () => void;
+  onImport: (grid: GridType) => void;
 };
 
 export const Controls = ({
@@ -15,7 +20,10 @@ export const Controls = ({
   speed,
   onSpeedChange,
   onExport,
+  onImport,
 }: ControlsProps) => {
+  const [isDialogOpen, setDialogOpen] = useState(false);
+
   return (
     <div className="flex items-center gap-4 mb-4">
       <Button
@@ -40,9 +48,14 @@ export const Controls = ({
         <span className="text-sm text-gray-600">{speed}ms</span>
       </div>
 
-      <Button variant="secondary" onClick={onExport}>
-        Export to JSON
+      <Button variant="secondary" onClick={onExport} disabled={isPlaying}>
+        {isPlaying ? <Icon Icon={PauseIcon} /> : 'Export grid to JSON'}
       </Button>
+
+      <Button variant="secondary" onClick={() => setDialogOpen(true)} disabled={isPlaying}>
+        {isPlaying ? <Icon Icon={PauseIcon} /> : 'Import grid from JSON'}
+      </Button>
+      <ImportGridDialog open={isDialogOpen} onOpenChange={setDialogOpen} onImport={onImport} />
     </div>
   );
 };

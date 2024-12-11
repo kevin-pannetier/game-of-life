@@ -95,6 +95,7 @@ export const useGameOfLife = (initialSize: number) => {
   }, []);
 
   const exportGrid = () => {
+    console.log('Exporting grid...');
     const data = { grid };
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
@@ -107,6 +108,7 @@ export const useGameOfLife = (initialSize: number) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    console.log('Download triggered.');
   };
 
   return {
@@ -118,5 +120,6 @@ export const useGameOfLife = (initialSize: number) => {
     nextGeneration,
     resetGame,
     exportGrid,
+    setGrid,
   };
 };
