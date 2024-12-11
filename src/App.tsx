@@ -22,6 +22,7 @@ export const App = () => {
     resetGame,
     exportGrid,
     setGrid,
+    cleanGrid,
   } = useGameOfLife(gridSize || 20);
 
   useEffect(() => {
@@ -78,11 +79,11 @@ export const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-zinc-900 text-white flex flex-col">
       {/* Header */}
       <div className="p-8">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Game of Life</h1>
+          <h1 className="text-3xl font-pixelate-regular">Game of Life</h1>
           <Button
             variant="outline"
             onClick={() => setDialogOpen(true)}
@@ -119,6 +120,7 @@ export const App = () => {
                 speed={speed}
                 onExport={exportGrid}
                 onImport={handleImport}
+                onClean={cleanGrid}
               />
             </div>
           </div>

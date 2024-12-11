@@ -27,14 +27,15 @@ const NewGameDialog = ({ onStart, open, onOpenChange }: NewGameDialogProps) => {
       description="Select the size of your grid. The game will start in pause mode."
       size="medium"
       variant="primary"
+      className="font-outfit-regular"
     >
       <GridSizeSelect
         onSizeSelect={setSelectedSize}
-        className="mb-6 w-full"
+        className="mb-6 w-full font-outfit-regular"
         data-testid="grid-size-select"
       />
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 font-outfit-regular">
         <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="cancel-button">
           Cancel
         </Button>

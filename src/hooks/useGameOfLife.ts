@@ -27,6 +27,10 @@ export const useGameOfLife = (initialSize: number) => {
     );
   }, []);
 
+  const cleanGrid = useCallback(() => {
+    setGrid(grid.map(row => row.map(cell => ({ ...cell, alive: false }))));
+  }, [grid]);
+
   const toggleCell = useCallback((row: number, col: number) => {
     setGrid(currentGrid => {
       const newGrid = [...currentGrid];
@@ -112,14 +116,15 @@ export const useGameOfLife = (initialSize: number) => {
   };
 
   return {
+    cleanGrid,
+    exportGrid,
     grid,
     isPlaying,
-    toggleCell,
-    setCell,
-    togglePlay,
     nextGeneration,
     resetGame,
-    exportGrid,
+    setCell,
     setGrid,
+    toggleCell,
+    togglePlay,
   };
 };

@@ -8,7 +8,7 @@ module.exports = {
     'plugin:storybook/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
-    'prettier'
+    'prettier',
   ],
   ignorePatterns: ['dist', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
@@ -16,14 +16,11 @@ module.exports = {
   settings: {
     'import/resolver': {
       typescript: true,
-      node: true
-    }
+      node: true,
+    },
   },
   rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     'import/order': [
       'error',
       {
@@ -33,16 +30,16 @@ module.exports = {
           'internal', // Absolute imports
           ['sibling', 'parent'], // Relative imports
           'index', // index imports
-          'unknown' // unknown
+          'unknown', // unknown
         ],
         'newlines-between': 'always',
         alphabetize: {
           order: 'asc', // sort in ascending order
-          caseInsensitive: true // ignore case
-        }
-      }
+          caseInsensitive: true, // ignore case
+        },
+      },
     ],
     'react/react-in-jsx-scope': 'off',
     'react/jsx-uses-react': 'off',
-  }
-}
+  },
+};
