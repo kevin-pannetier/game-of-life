@@ -1,22 +1,22 @@
-import { Meta, StoryObj } from "@storybook/react";
-import Dialog, { DialogProps } from "./Dialog";
-import Button from "../Button/Button";
-import { useState } from "react";
+import { Meta, StoryObj } from '@storybook/react';
+import Dialog, { DialogProps } from './Dialog';
+import Button from '../Button/Button';
+import { useState } from 'react';
 
 const meta: Meta<DialogProps> = {
-  title: "Ui/Dialog",
+  title: 'Ui/Dialog',
   component: Dialog,
   argTypes: {
     variant: {
-      control: "select",
-      options: ["primary", "danger", "info"],
+      control: 'select',
+      options: ['primary', 'danger', 'info'],
     },
     size: {
-      control: "select",
-      options: ["small", "medium", "large"],
+      control: 'select',
+      options: ['small', 'medium', 'large'],
     },
     hideClose: {
-      control: "boolean",
+      control: 'boolean',
     },
   },
 };
@@ -49,39 +49,36 @@ const DialogDemo = (props: DialogProps) => {
 };
 
 export const Default: Story = {
-  render: (args) => <DialogDemo {...args} />,
+  render: args => <DialogDemo {...args} />,
   args: {
-    title: "Dialog Title",
+    title: 'Dialog Title',
     description: "This is a description of the dialog's purpose.",
-    variant: "primary",
-    size: "medium",
+    variant: 'primary',
+    size: 'medium',
   },
 };
 
 export const Danger: Story = {
-  render: (args) => <DialogDemo {...args} />,
+  render: args => <DialogDemo {...args} />,
   args: {
-    title: "Delete Confirmation",
-    description:
-      "Are you sure you want to delete this item? This action cannot be undone.",
-    variant: "danger",
-    size: "small",
+    title: 'Delete Confirmation',
+    description: 'Are you sure you want to delete this item? This action cannot be undone.',
+    variant: 'danger',
+    size: 'small',
   },
 };
 
 export const Large: Story = {
-  render: (args) => <DialogDemo {...args} />,
+  render: args => <DialogDemo {...args} />,
   args: {
-    title: "Large Dialog",
-    description: "This is a large dialog with more content space.",
-    variant: "info",
-    size: "large",
+    title: 'Large Dialog',
+    description: 'This is a large dialog with more content space.',
+    variant: 'info',
+    size: 'large',
     children: (
       <div className="space-y-4">
         <p>This is a larger dialog with more content.</p>
-        <p>
-          It can contain more information and larger forms or content areas.
-        </p>
+        <p>It can contain more information and larger forms or content areas.</p>
         <div className="flex justify-end gap-3">
           <Button variant="outline">Cancel</Button>
           <Button variant="primary">Confirm</Button>
@@ -92,9 +89,9 @@ export const Large: Story = {
 };
 
 export const NoHeaderElements: Story = {
-  render: (args) => <DialogDemo {...args} />,
+  render: args => <DialogDemo {...args} />,
   args: {
-    size: "medium",
+    size: 'medium',
     children: (
       <div className="space-y-4">
         <p>A dialog without title or description.</p>
@@ -108,10 +105,10 @@ export const NoHeaderElements: Story = {
 };
 
 export const CustomContent: Story = {
-  render: (args) => <DialogDemo {...args} />,
+  render: args => <DialogDemo {...args} />,
   args: {
-    title: "Custom Content",
-    size: "medium",
+    title: 'Custom Content',
+    size: 'medium',
     children: (
       <div className="space-y-4">
         <div className="bg-gray-100 p-4 rounded">
@@ -119,9 +116,7 @@ export const CustomContent: Story = {
         </div>
         <form className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Input Field
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Input Field</label>
             <input
               type="text"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"

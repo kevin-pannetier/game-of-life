@@ -1,14 +1,14 @@
-import { Meta, StoryObj } from "@storybook/react";
-import Icon, { IconPropsExtended } from "./Icon";
-import { StarIcon } from "@radix-ui/react-icons";
+import { Meta, StoryObj } from '@storybook/react';
+import Icon, { IconPropsExtended } from './Icon';
+import { StarIcon } from '@radix-ui/react-icons';
 
 const meta: Meta<IconPropsExtended> = {
-  title: "Ui/Icon",
+  title: 'Ui/Icon',
   component: Icon,
   argTypes: {
     size: {
-      control: "select",
-      options: ["small", "medium", "large"],
+      control: 'select',
+      options: ['small', 'medium', 'large'],
     },
   },
 };
@@ -20,6 +20,6 @@ type Story = StoryObj<IconPropsExtended>;
 export const Star: Story = {
   args: {
     Icon: StarIcon,
-    size: "medium",
+    size: 'medium',
   },
 };
