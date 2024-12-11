@@ -19,5 +19,6 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
+    exclude: ['e2eTests/**/*.spec.tsx', '**/node_modules/**', '**/dist/**'],
   },
 } as ViteConfig & VitestConfig);

@@ -32,13 +32,26 @@ const NewGameDialog = ({ onStart, open, onOpenChange }: NewGameDialogProps) => {
             Select the size of your grid. The game will start in pause mode.
           </Dialog.Description>
 
-          <GridSizeSelect onSizeSelect={setSelectedSize} className="mb-6 w-full" />
+          <GridSizeSelect
+            onSizeSelect={setSelectedSize}
+            className="mb-6 w-full"
+            data-testid="grid-size-select"
+          />
 
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="cancel-button"
+            >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleStart} disabled={!selectedSize}>
+            <Button
+              variant="primary"
+              onClick={handleStart}
+              disabled={!selectedSize}
+              data-testid="start-game-button"
+            >
               Start Game
             </Button>
           </div>
