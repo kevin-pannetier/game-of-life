@@ -94,6 +94,23 @@ export const useGameOfLife = (initialSize: number) => {
     setIsPlaying(prev => !prev);
   }, []);
 
+  const exportGrid = () => {
+    console.log('Exporting grid...');
+    const data = { grid };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'game-of-life-grid.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log('Download triggered.');
+  };
+
   return {
     grid,
     isPlaying,
@@ -102,5 +119,7 @@ export const useGameOfLife = (initialSize: number) => {
     togglePlay,
     nextGeneration,
     resetGame,
+    exportGrid,
+    setGrid,
   };
 };

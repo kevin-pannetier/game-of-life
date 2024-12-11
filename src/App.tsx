@@ -6,15 +6,23 @@ import NewGameDialog from './components/NewGameDialog/NewGameDialog';
 import { useGameOfLife } from './hooks/useGameOfLife';
 import Button from './ui/Button/Button';
 import './index.css';
+import { GridType } from './components/Grid/types';
 
 export const App = () => {
   const [dialogOpen, setDialogOpen] = useState(true);
   const [gridSize, setGridSize] = useState<number | null>(null);
   const [speed, setSpeed] = useState(500);
 
-  const { grid, isPlaying, toggleCell, togglePlay, nextGeneration, resetGame } = useGameOfLife(
-    gridSize || 20,
-  );
+  const {
+    grid,
+    isPlaying,
+    toggleCell,
+    togglePlay,
+    nextGeneration,
+    resetGame,
+    exportGrid,
+    setGrid,
+  } = useGameOfLife(gridSize || 20);
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval>;
@@ -65,6 +73,10 @@ export const App = () => {
     setSpeed(newSpeed);
   }, []);
 
+  const handleImport = (importedGrid: GridType) => {
+    setGrid(importedGrid);
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
@@ -105,6 +117,8 @@ export const App = () => {
                 onTogglePlay={togglePlay}
                 onSpeedChange={handleSpeedChange}
                 speed={speed}
+                onExport={exportGrid}
+                onImport={handleImport}
               />
             </div>
           </div>

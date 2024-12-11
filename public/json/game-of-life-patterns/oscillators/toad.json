@@ -1,9 +1,0 @@
-{
-  "name": "Toad",
-  "type": "oscillator",
-  "period": 2,
-  "grid": [
-    [{"alive": false}, {"alive": true}, {"alive": true}, {"alive": true}],
-    [{"alive": true}, {"alive": true}, {"alive": true}, {"alive": false}]
-  ]
-}
