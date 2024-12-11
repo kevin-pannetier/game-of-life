@@ -8,18 +8,24 @@
     "email": "pannetier.kevin@gmail.com"
   },
   "scripts": {
-    "dev": "vite",
-    "type-check": "tsc -p tsconfig.json --noEmit",
+    "build-storybook": "storybook build",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
+    "dev": "vite",
     "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "lint:fix": "eslint . --fix",
+    "lint": "eslint .",
+    "pre-commit": "lint-staged",
+    "prepare": "husky",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "pre-commit": "lint-staged",
-    "prepare": "husky"
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "type-check": "tsc -p tsconfig.json --noEmit"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -47,6 +53,7 @@
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.2",
     "@eslint/js": "^9.15.0",
+    "@playwright/test": "^1.49.1",
     "@storybook/addon-essentials": "^8.4.6",
     "@storybook/addon-interactions": "^8.4.6",
     "@storybook/addon-onboarding": "^8.4.6",
@@ -55,11 +62,13 @@
     "@storybook/react": "^8.4.6",
     "@storybook/react-vite": "^8.4.6",
     "@storybook/test": "^8.4.6",
+    "@testing-library/react": "^16.1.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-window": "^1.8.8",
     "@typescript-eslint/parser": "^8.18.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",
@@ -69,11 +78,13 @@
     "eslint-plugin-storybook": "^0.11.1",
     "globals": "^15.12.0",
     "husky": "^9.1.7",
+    "jsdom": "^25.0.1",
     "lint-staged": "^15.2.11",
     "prettier": "^3.4.2",
     "storybook": "^8.4.6",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.15.0",
-    "vite": "^6.0.1"
+    "vite": "^6.0.1",
+    "vitest": "^2.1.8"
   }
 }

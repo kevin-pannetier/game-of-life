@@ -1,4 +1,4 @@
-import Select from "../../ui/Select/Select";
+import Select from '../../ui/Select/Select';
 
 export type GridSizeSelectProps = {
   onSizeSelect: (size: number) => void;
@@ -8,12 +8,12 @@ export type GridSizeSelectProps = {
 const GridSizeSelect = ({ onSizeSelect, className }: GridSizeSelectProps) => {
   // Predefined size options
   const sizeOptions = [
-    { value: "3", label: "3x3 (Tiny)" },
-    { value: "10", label: "10x10 (Small)" },
-    { value: "20", label: "20x20 (Medium)" },
-    { value: "50", label: "50x50 (Large)" },
-    { value: "100", label: "100x100 (Extra Large)" },
-    { value: "1000", label: "1000x1000 (Maximum)" },
+    { value: '3', label: '3x3 (Tiny)' },
+    { value: '10', label: '10x10 (Small)' },
+    { value: '20', label: '20x20 (Medium)' },
+    { value: '50', label: '50x50 (Large)' },
+    { value: '100', label: '100x100 (Extra Large)' },
+    { value: '1000', label: '1000x1000 (Maximum)' },
   ];
 
   const handleSizeChange = (value: string) => {
@@ -29,6 +29,7 @@ const GridSizeSelect = ({ onSizeSelect, className }: GridSizeSelectProps) => {
       options={sizeOptions}
       onValueChange={handleSizeChange}
       className={className}
+      data-testid="grid-size-select"
     />
   );
 };

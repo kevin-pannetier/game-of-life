@@ -27,7 +27,6 @@ export function Grid({
   const handleMouseEnter = useCallback(
     (rowIndex: number, columnIndex: number) => {
       if (isMouseDown) {
-        // Only toggle if we haven't toggled this cell yet
         if (
           !lastToggledCell.current ||
           lastToggledCell.current.row !== rowIndex ||
@@ -51,22 +50,15 @@ export function Grid({
       rowIndex: number;
       style: React.CSSProperties;
     }) => (
-      <div
-        style={{
-          ...style,
-          padding: 1,
-        }}
-      >
-        <div
-          className="w-full h-full"
-          onMouseDown={() => handleMouseDown(rowIndex, columnIndex)}
-          onMouseEnter={() => handleMouseEnter(rowIndex, columnIndex)}
-        >
-          <Cell
-            alive={grid[rowIndex][columnIndex].alive}
-            color={grid[rowIndex][columnIndex].color}
-          />
-        </div>
+      <div style={{ ...style, padding: 1 }}>
+        <Cell
+          row={rowIndex}
+          col={columnIndex}
+          alive={grid[rowIndex][columnIndex].alive}
+          color={grid[rowIndex][columnIndex].color}
+          onMouseDown={handleMouseDown}
+          onMouseEnter={handleMouseEnter}
+        />
       </div>
     ),
     [grid, handleMouseDown, handleMouseEnter],
@@ -83,7 +75,7 @@ export function Grid({
         setIsMouseDown(false);
         lastToggledCell.current = null;
       }}
-      role="grid"
+      data-testid="grid"
       aria-label="Game of Life Grid"
     >
       <AutoSizer>
