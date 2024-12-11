@@ -98,4 +98,32 @@ test.describe('Game of Life', () => {
     const cells = grid.locator('[role="gridcell"]');
     await expect(cells).toHaveCount(100); // For a 10x10 grid
   });
+
+  test("should export the grid when the 'Export to JSON' button is clicked", async ({ page }) => {
+    // Trigger the export button
+    const [download] = await Promise.all([
+      page.waitForEvent('download'), // Wait for the download to start
+      page.getByRole('button', { name: 'Export to JSON' }).click(), // Click the export button
+    ]);
+
+    // Assert download filename
+    const suggestedFilename = await download.suggestedFilename();
+    expect(suggestedFilename).toBe('game-of-life-grid.json');
+
+    // Save the downloaded file to a temporary directory (optional)
+    const downloadPath = await download.path();
+    console.log(`File downloaded to: ${downloadPath}`);
+
+    // Optional: Validate the file content
+    const fileContent = await download.createReadStream();
+    const buffer: Uint8Array[] = [];
+    for await (const chunk of fileContent) {
+      buffer.push(chunk);
+    }
+    const content = Buffer.concat(buffer as Uint8Array[]).toString();
+    const parsedContent = JSON.parse(content);
+
+    expect(parsedContent).toHaveProperty('grid');
+    expect(Array.isArray(parsedContent.grid)).toBe(true);
+  });
 });

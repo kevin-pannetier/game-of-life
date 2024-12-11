@@ -6,9 +6,16 @@ export type ControlsProps = {
   onTogglePlay: () => void;
   speed: number;
   onSpeedChange: (speed: number) => void;
+  onExport: () => void;
 };
 
-export const Controls = ({ isPlaying, onTogglePlay, speed, onSpeedChange }: ControlsProps) => {
+export const Controls = ({
+  isPlaying,
+  onTogglePlay,
+  speed,
+  onSpeedChange,
+  onExport,
+}: ControlsProps) => {
   return (
     <div className="flex items-center gap-4 mb-4">
       <Button
@@ -32,6 +39,10 @@ export const Controls = ({ isPlaying, onTogglePlay, speed, onSpeedChange }: Cont
         />
         <span className="text-sm text-gray-600">{speed}ms</span>
       </div>
+
+      <Button variant="secondary" onClick={onExport}>
+        Export to JSON
+      </Button>
     </div>
   );
 };

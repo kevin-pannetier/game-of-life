@@ -12,9 +12,8 @@ export const App = () => {
   const [gridSize, setGridSize] = useState<number | null>(null);
   const [speed, setSpeed] = useState(500);
 
-  const { grid, isPlaying, toggleCell, togglePlay, nextGeneration, resetGame } = useGameOfLife(
-    gridSize || 20,
-  );
+  const { grid, isPlaying, toggleCell, togglePlay, nextGeneration, resetGame, exportGrid } =
+    useGameOfLife(gridSize || 20);
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval>;
@@ -105,6 +104,7 @@ export const App = () => {
                 onTogglePlay={togglePlay}
                 onSpeedChange={handleSpeedChange}
                 speed={speed}
+                onExport={exportGrid}
               />
             </div>
           </div>
