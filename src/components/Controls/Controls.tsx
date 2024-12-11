@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import Button from '../../ui/Button/Button';
-import { PlayIcon, PauseIcon, DownloadIcon, UploadIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  PlayIcon,
+  PauseIcon,
+  DownloadIcon,
+  UploadIcon,
+  TrashIcon,
+  QuestionMarkCircledIcon,
+} from '@radix-ui/react-icons';
 import ImportGridDialog from '../ImportGridDialog/ImportGridDialog';
 import { GridType } from '../Grid/types';
 import Icon from '../../ui/Icon/Icon';
@@ -14,7 +21,10 @@ export type ControlsProps = {
   onExport: () => void;
   onImport: (grid: GridType) => void;
   onClean: () => void;
+  setNewGameDialogOpen: (open: boolean) => void;
 };
+
+import ShortcutInfoDialog from '../ShortcutInfoDialog/ShortcutInfoDialog';
 
 export const Controls = ({
   isPlaying,
@@ -24,8 +34,10 @@ export const Controls = ({
   onExport,
   onImport,
   onClean,
+  setNewGameDialogOpen,
 }: ControlsProps) => {
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isShortcutDialogOpen, setShortcutDialogOpen] = useState(false);
 
   const speedOptions = [
     { value: 1000, label: 'Slow' },
@@ -33,12 +45,41 @@ export const Controls = ({
     { value: 100, label: 'Maximum' },
   ];
 
-  // Spacebar event listener
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.code === 'Space') {
-        event.preventDefault(); // Prevent page scrolling
+        event.preventDefault();
         onTogglePlay();
+      }
+
+      if (event.code === 'Digit1') {
+        onSpeedChange(1000);
+      }
+      if (event.code === 'Digit2') {
+        onSpeedChange(500);
+      }
+      if (event.code === 'Digit3') {
+        onSpeedChange(100);
+      }
+
+      if (event.code === 'KeyE') {
+        onExport();
+      }
+
+      if (event.code === 'KeyI') {
+        setDialogOpen(true);
+      }
+
+      if (event.code === 'KeyC') {
+        onClean();
+      }
+
+      if (event.code === 'Escape') {
+        setNewGameDialogOpen(true);
+      }
+
+      if (event.code === 'KeyK') {
+        setShortcutDialogOpen(true);
       }
     };
 
@@ -46,12 +87,11 @@ export const Controls = ({
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [onTogglePlay]);
+  }, [onClean, onExport, onSpeedChange, onTogglePlay, setNewGameDialogOpen]);
 
   return (
     <div className="bg-zinc-950 text-white py-2 fixed bottom-0 left-0 right-0">
       <div className="container mx-auto flex items-center justify-between">
-        {/* Speed Control */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-xs">Speed:</span>
@@ -60,6 +100,7 @@ export const Controls = ({
               variant="outline"
               options={speedOptions.map(option => option.label)}
               defaultValue={speedOptions.find(option => option.value === speed)?.label}
+              value={speedOptions.find(option => option.value === speed)?.label}
               onChange={selectedLabel => {
                 const selectedSpeed = speedOptions.find(
                   option => option.label === selectedLabel,
@@ -73,7 +114,6 @@ export const Controls = ({
           </div>
         </div>
 
-        {/* Play Button */}
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <Button
             size="large"
@@ -86,7 +126,6 @@ export const Controls = ({
           </Button>
         </div>
 
-        {/* Export, Import, and Clean Buttons */}
         <div className="flex items-center gap-4">
           <Button
             size="small"
@@ -115,8 +154,17 @@ export const Controls = ({
           >
             Clean Grid
           </Button>
+          <Button
+            size="small"
+            variant="outline"
+            onClick={() => setShortcutDialogOpen(true)}
+            icons={{ before: QuestionMarkCircledIcon }}
+          >
+            Shortcuts
+          </Button>
         </div>
       </div>
+      <ShortcutInfoDialog open={isShortcutDialogOpen} onOpenChange={setShortcutDialogOpen} />
       <ImportGridDialog open={isDialogOpen} onOpenChange={setDialogOpen} onImport={onImport} />
     </div>
   );

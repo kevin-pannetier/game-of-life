@@ -83,7 +83,10 @@ export const App = () => {
       {/* Header */}
       <div className="p-8">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-pixelate-regular">Game of Life</h1>
+          <h1 className="text-3xl font-pixelate-regular">
+            Game of Life{' '}
+            <small className="text-sm font-outfit-medium text-zinc-500">By Kévin Pannetier</small>
+          </h1>
           <Button
             variant="outline"
             onClick={() => setDialogOpen(true)}
@@ -121,6 +124,7 @@ export const App = () => {
                 onExport={exportGrid}
                 onImport={handleImport}
                 onClean={cleanGrid}
+                setNewGameDialogOpen={setDialogOpen}
               />
             </div>
           </div>
