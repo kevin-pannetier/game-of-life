@@ -17,6 +17,9 @@ const meta: Meta<ButtonProps> = {
     isLoading: {
       control: 'boolean',
     },
+    disabled: {
+      control: 'boolean',
+    },
   },
 };
 
@@ -49,5 +52,14 @@ export const Default: Story = {
     size: 'medium',
     children: 'Button',
     icons: { before: StarIcon },
+  },
+};
+
+export const Disabled: Story = {
+  args: {
+    variant: 'outline',
+    size: 'medium',
+    disabled: true,
+    children: 'Disabled Button',
   },
 };

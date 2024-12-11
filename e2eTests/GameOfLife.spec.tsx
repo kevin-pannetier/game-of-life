@@ -137,7 +137,7 @@ async function createOvercrowdedCell(page: Page) {
 async function exportGrid(page: Page) {
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Export grid to JSON' }).click(),
+    page.getByRole('button', { name: 'Export Grid' }).click(),
   ]);
 
   const suggestedFilename = download.suggestedFilename();
@@ -156,7 +156,7 @@ async function exportGrid(page: Page) {
 }
 
 async function importGrid(page: Page, __dirname: string) {
-  const importButton = page.getByRole('button', { name: 'Import grid from JSON' });
+  const importButton = page.getByRole('button', { name: 'Import Grid' });
   await importButton.click();
 
   const label = page.getByTestId('file-label');

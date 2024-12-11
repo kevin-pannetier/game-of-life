@@ -1,3 +1,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Pixelate Regular';
+  src:
+    local('Pixelate Regular'),
+    local('Pixelate-Regular'),
+    url('assets/fonts/Pixelate-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Outfit Regular';
+  src:
+    local('Outfit Regular'),
+    local('Outfit-Regular'),
+    url('assets/fonts/Outfit-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Outfit Medium';
+  src:
+    local('Outfit Medium'),
+    local('Outfit-Medium'),
+    url('assets/fonts/Outfit-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Outfit Bold';
+  src:
+    local('Outfit Bold'),
+    local('Outfit-Bold'),
+    url('assets/fonts/Outfit-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Outfit Black';
+  src:
+    local('Outfit Black'),
+    local('Outfit-Black'),
+    url('assets/fonts/Outfit-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}

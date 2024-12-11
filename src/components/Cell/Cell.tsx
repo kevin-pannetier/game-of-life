@@ -7,10 +7,10 @@ export type CellProps = CellType & {
   onMouseEnter: (row: number, col: number) => void;
 };
 
-export function Cell({ alive, color = 'black', row, col, onMouseDown, onMouseEnter }: CellProps) {
+export function Cell({ alive, color = 'white', row, col, onMouseDown, onMouseEnter }: CellProps) {
   return (
     <div
-      className="w-full h-full transition-colors duration-200 cursor-cell border border-gray-200"
+      className="w-full h-full transition-colors duration-200 cursor-cell border border-zinc-700"
       role="gridcell"
       aria-label={`cell-${alive ? 'alive' : 'dead'}`}
       data-testid={`cell-${row}-${col}`}

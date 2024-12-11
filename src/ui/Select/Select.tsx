@@ -1,4 +1,3 @@
-// Select/Select.tsx
 import React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import classNames from 'classnames';
@@ -43,10 +42,10 @@ const Select = ({
   ...props
 }: SelectProps) => {
   const triggerClassName = classNames(
-    'inline-flex items-center justify-between rounded font-medium transition-all focus:outline-none focus:ring-2',
+    'inline-flex items-center justify-between rounded font-outfit-regular font-medium transition-all focus:outline-none focus:ring-2',
     {
       // Variants
-      'bg-white border border-gray-300 text-gray-900 hover:border-gray-400 focus:ring-blue-300':
+      'bg-zinc-900 border border-gray-600 text-white hover:border-zinc-500 focus:ring-zinc-400':
         variant === 'primary',
       'bg-gray-100 border border-gray-400 text-gray-900 hover:bg-gray-200 focus:ring-gray-300':
         variant === 'secondary',
@@ -57,14 +56,14 @@ const Select = ({
       'h-10 px-3 text-base': size === 'medium',
       'h-12 px-4 text-lg': size === 'large',
       // States
-      'border-red-500 focus:ring-red-200': error,
+      'border-red-500 focus:ring-red-300': error,
       'opacity-50 cursor-not-allowed': disabled,
     },
     className,
   );
 
   const contentClassName = classNames(
-    'overflow-hidden rounded-md bg-white shadow-lg border border-gray-200',
+    'overflow-hidden font-outfit-regular rounded-md bg-zinc-900 text-white shadow-lg border border-zinc-700',
     {
       'text-sm': size === 'small',
       'text-base': size === 'medium',
@@ -80,7 +79,9 @@ const Select = ({
       'text-lg': size === 'large',
       'cursor-not-allowed opacity-50': disabled,
       'cursor-default': !disabled,
-      'hover:bg-gray-100 focus:bg-gray-100': !disabled,
+      'hover:bg-zinc-600 focus:bg-zinc-600': !disabled,
+      'text-white': !disabled,
+      'text-gray-500': disabled,
     },
   );
 
@@ -100,7 +101,7 @@ const Select = ({
 
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content className={contentClassName}>
-          <SelectPrimitive.ScrollUpButton className="flex h-6 items-center justify-center bg-white text-gray-700">
+          <SelectPrimitive.ScrollUpButton className="flex h-6 items-center justify-center bg-zinc-800 text-gray-400">
             <ChevronUpIcon />
           </SelectPrimitive.ScrollUpButton>
 
@@ -120,7 +121,7 @@ const Select = ({
             {groups.length > 0 &&
               groups.map(group => (
                 <SelectPrimitive.Group key={group.label}>
-                  <SelectPrimitive.Label className="px-6 py-1.5 text-sm font-semibold text-gray-500">
+                  <SelectPrimitive.Label className="px-6 py-1.5 text-sm font-semibold text-gray-400">
                     {group.label}
                   </SelectPrimitive.Label>
                   {group.options.map(option => (
@@ -137,7 +138,7 @@ const Select = ({
               ))}
           </SelectPrimitive.Viewport>
 
-          <SelectPrimitive.ScrollDownButton className="flex h-6 items-center justify-center bg-white text-gray-700">
+          <SelectPrimitive.ScrollDownButton className="flex h-6 items-center justify-center bg-zinc-800 text-gray-400">
             <ChevronDownIcon />
           </SelectPrimitive.ScrollDownButton>
         </SelectPrimitive.Content>
@@ -156,7 +157,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectPrimitive.SelectItemPr
         ref={forwardedRef}
       >
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-        <SelectPrimitive.ItemIndicator className="absolute left-1 inline-flex w-4 items-center justify-center">
+        <SelectPrimitive.ItemIndicator className="absolute left-1 inline-flex w-4 items-center justify-center text-zinc-400">
           <CheckIcon />
         </SelectPrimitive.ItemIndicator>
       </SelectPrimitive.Item>

@@ -1,13 +1,12 @@
-// Slider/Slider.stories.tsx
 import { Meta, StoryObj } from '@storybook/react';
-import SliderComponent, { SliderProps } from './Slider';
+import { Slider, SliderProps } from './Slider';
 
 const meta: Meta<SliderProps> = {
   title: 'Ui/Slider',
-  component: SliderComponent,
+  component: Slider,
   argTypes: {
     defaultValue: {
-      control: 'number', //TODO: Find a way to make this an array
+      control: 'object',
       description: 'Initial value of the slider.',
     },
     max: {

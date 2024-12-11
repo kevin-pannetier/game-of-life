@@ -12,6 +12,7 @@ export type DialogProps = {
   size?: 'small' | 'medium' | 'large';
   variant?: 'primary' | 'danger' | 'info';
   hideClose?: boolean;
+  className?: string;
 } & DialogPrimitive.DialogProps;
 
 const Dialog = ({
@@ -23,40 +24,38 @@ const Dialog = ({
   size = 'medium',
   variant = 'primary',
   hideClose = false,
+  className,
   ...props
 }: DialogProps) => {
   const contentClass = classNames(
+    className,
     'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-    'bg-white rounded-lg shadow-xl',
+    'bg-black rounded-lg shadow-xl',
     'focus:outline-none',
     {
       // Sizes
       'w-[400px]': size === 'small',
       'w-[560px]': size === 'medium',
       'w-[800px]': size === 'large',
-      // Variants affect border color
-      'border-2 border-blue-200': variant === 'primary',
-      'border-2 border-red-200': variant === 'danger',
-      'border-2 border-gray-200': variant === 'info',
     },
   );
 
   const titleClass = classNames('text-lg font-semibold mb-2', {
-    'text-blue-900': variant === 'primary',
-    'text-red-900': variant === 'danger',
-    'text-gray-900': variant === 'info',
+    'text-zinc-500': variant === 'primary',
+    'text-red-500': variant === 'danger',
+    'text-gray-500': variant === 'info',
   });
 
   const descriptionClass = classNames('text-sm mb-4', {
-    'text-blue-700': variant === 'primary',
-    'text-red-700': variant === 'danger',
-    'text-gray-700': variant === 'info',
+    'text-zinc-600': variant === 'primary',
+    'text-red-600': variant === 'danger',
+    'text-gray-600': variant === 'info',
   });
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} {...props}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+        <DialogPrimitive.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-md" />
         <DialogPrimitive.Content className={contentClass}>
           <div className="p-6">
             {title && <DialogPrimitive.Title className={titleClass}>{title}</DialogPrimitive.Title>}
@@ -72,8 +71,8 @@ const Dialog = ({
             <DialogPrimitive.Close
               className={classNames(
                 'absolute top-4 right-4 rounded-full p-1',
-                'text-gray-400 hover:text-gray-600',
-                'focus:outline-none focus:ring-2 focus:ring-gray-400',
+                'text-zinc-400 hover:text-zinc-600',
+                'focus:outline-none focus:ring-2 focus:ring-zinc-400',
               )}
             >
               <Cross2Icon />
