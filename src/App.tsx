@@ -20,6 +20,7 @@ export const App = () => {
     setGrid,
     cleanGrid,
     savedState,
+    generationCount,
   } = useGameOfLife(null); // Pass null to let the hook handle initial size
 
   const [dialogOpen, setDialogOpen] = useState(!savedState);
@@ -90,6 +91,7 @@ export const App = () => {
             Game of Life{' '}
             <small className="text-sm font-outfit-medium text-zinc-500">By Kévin Pannetier</small>
           </h1>
+          <div className="text-xl font-pixelate-regular">Generation: {generationCount}</div>
           <Button
             variant="outline"
             onClick={() => setDialogOpen(true)}

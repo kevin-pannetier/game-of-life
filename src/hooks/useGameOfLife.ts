@@ -6,6 +6,7 @@ interface StoredGameState {
   grid: GridType;
   size: number;
   speed?: number;
+  generationCount: number;
 }
 
 // Helper to load saved state from localStorage
@@ -21,10 +22,16 @@ const loadSavedState = (): StoredGameState | null => {
   return null;
 };
 
+// Helper to check if grid has any live cells
+const hasLiveCells = (grid: GridType): boolean => {
+  return grid.some(row => row.some(cell => cell.alive));
+};
+
 export const useGameOfLife = (initialSize: number | null = null) => {
   // Load saved state when hook is initialized
   const savedState = loadSavedState();
   const effectiveSize = savedState?.size || initialSize || 20;
+  const [generationCount, setGenerationCount] = useState(savedState?.generationCount || 0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [grid, setGrid] = useState<GridType>(
@@ -39,12 +46,13 @@ export const useGameOfLife = (initialSize: number | null = null) => {
         ),
   );
 
-  // Save grid to localStorage whenever it changes
-  const saveGrid = useCallback((newGrid: GridType) => {
+  // Save grid and generation count to localStorage
+  const saveGrid = useCallback((newGrid: GridType, generations: number) => {
     try {
       const gameState: StoredGameState = {
         grid: newGrid,
         size: newGrid.length,
+        generationCount: generations,
       };
       localStorage.setItem('gameOfLife', JSON.stringify(gameState));
     } catch (error) {
@@ -54,19 +62,20 @@ export const useGameOfLife = (initialSize: number | null = null) => {
 
   // Wrap setGrid to always save when grid changes
   const updateGrid = useCallback(
-    (newGrid: GridType | ((prev: GridType) => GridType)) => {
+    (newGrid: GridType | ((prev: GridType) => GridType), newGenerationCount?: number) => {
       setGrid(prev => {
         const nextGrid = typeof newGrid === 'function' ? newGrid(prev) : newGrid;
-        saveGrid(nextGrid);
+        saveGrid(nextGrid, newGenerationCount ?? generationCount);
         return nextGrid;
       });
     },
-    [saveGrid],
+    [saveGrid, generationCount],
   );
 
   const resetGame = useCallback(
     (size: number) => {
       setIsPlaying(false);
+      setGenerationCount(0);
       const newGrid = Array(size)
         .fill(null)
         .map(() =>
@@ -74,13 +83,17 @@ export const useGameOfLife = (initialSize: number | null = null) => {
             .fill(null)
             .map(() => ({ alive: false }) as CellType),
         );
-      updateGrid(newGrid);
+      updateGrid(newGrid, 0);
     },
     [updateGrid],
   );
 
   const cleanGrid = useCallback(() => {
-    updateGrid(grid.map(row => row.map(cell => ({ ...cell, alive: false }))));
+    setGenerationCount(0);
+    updateGrid(
+      grid.map(row => row.map(cell => ({ ...cell, alive: false }))),
+      0,
+    );
   }, [grid, updateGrid]);
 
   const toggleCell = useCallback(
@@ -137,8 +150,15 @@ export const useGameOfLife = (initialSize: number | null = null) => {
   }, []);
 
   const nextGeneration = useCallback(() => {
+    // Calculate new generation count based on current grid state
+    const nextCount = hasLiveCells(grid) ? generationCount + 1 : generationCount;
+
+    if (hasLiveCells(grid)) {
+      setGenerationCount(nextCount);
+    }
+
     updateGrid(currentGrid => {
-      return currentGrid.map((row, i) =>
+      const nextGrid = currentGrid.map((row, i) =>
         row.map((cell, j) => {
           const neighbors = countLiveNeighbors(currentGrid, i, j);
           return {
@@ -149,8 +169,12 @@ export const useGameOfLife = (initialSize: number | null = null) => {
           };
         }),
       );
+
+      // Save grid with the new generation count
+      saveGrid(nextGrid, nextCount);
+      return nextGrid;
     });
-  }, [countLiveNeighbors, updateGrid]);
+  }, [countLiveNeighbors, updateGrid, saveGrid, grid, generationCount]);
 
   const togglePlay = useCallback(() => {
     setIsPlaying(prev => !prev);
@@ -184,6 +208,7 @@ export const useGameOfLife = (initialSize: number | null = null) => {
     setGrid: updateGrid,
     toggleCell,
     togglePlay,
-    savedState, // Add this to let the App component know if there was a saved state
+    savedState,
+    generationCount,
   };
 };
