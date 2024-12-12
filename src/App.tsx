@@ -1,12 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
-import { PlayIcon } from '@radix-ui/react-icons';
-import { Grid } from './components/Grid/Grid';
-import { Controls } from './components/Controls/Controls';
-import NewGameDialog from './components/NewGameDialog/NewGameDialog';
-import { useGameOfLife } from './hooks/useGameOfLife';
-import Button from './ui/Button/Button';
 import './index.css';
+
+import { useCallback, useEffect, useState } from 'react';
+
+import Button from './ui/Button/Button';
+import { Controls } from './components/Controls/Controls';
+import { Grid } from './components/Grid/Grid';
 import { GridType } from './components/Grid/types';
+import NewGameDialog from './components/NewGameDialog/NewGameDialog';
+import { PlayIcon } from '@radix-ui/react-icons';
+import { useGameOfLife } from './hooks/useGameOfLife';
 
 export const App = () => {
   const {

@@ -1,4 +1,3 @@
-// Select/Select.stories.tsx
 import { Meta, StoryObj } from '@storybook/react';
 import Select, { SelectProps } from './Select';
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import classNames from 'classnames';
+
 import Button from '../Button/Button';
+import classNames from 'classnames';
 
 export type ButtonGroupProps = {
   options: string[];

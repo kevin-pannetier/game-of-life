@@ -1,4 +1,4 @@
-import { test, Page, expect } from '@playwright/test';
+import { Page, expect, test } from '@playwright/test';
 import { createStableBlock, getBlockColors, setupGrid, startGame } from './helpers';
 
 test.describe('Game of Life', () => {

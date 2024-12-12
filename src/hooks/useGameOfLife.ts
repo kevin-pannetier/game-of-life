@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
-import type { GridType } from '../components/Grid/types';
+import { useCallback, useState } from 'react';
+
 import type { CellType } from '../components/Cell/types';
+import type { GridType } from '../components/Grid/types';
 import { determineCellColor } from '../utils/colorUtils';
 
 interface StoredGameState {

@@ -1,4 +1,4 @@
-import { test, Page } from '@playwright/test';
+import { Page, test } from '@playwright/test';
 import { setupGrid, startGame, toggleCell, verifyGridSize } from './helpers';
 
 test.describe('Game of Life', () => {

@@ -1,7 +1,8 @@
-import React, { ButtonHTMLAttributes } from 'react';
-import classNames from 'classnames';
 import Icon, { IconComponent } from '../Icon/Icon';
+import React, { ButtonHTMLAttributes } from 'react';
+
 import { ReloadIcon } from '@radix-ui/react-icons';
+import classNames from 'classnames';
 
 export type ButtonProps = {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';

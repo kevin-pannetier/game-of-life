@@ -1,4 +1,3 @@
-import { test, expect } from '@playwright/test';
 import {
   createLShape,
   createStableBlock,
@@ -10,6 +9,7 @@ import {
   startGame,
   waitForButtonEnabled,
 } from './helpers';
+import { expect, test } from '@playwright/test';
 
 test.describe('History Navigation', () => {
   // Single beforeEach that sets up the game state

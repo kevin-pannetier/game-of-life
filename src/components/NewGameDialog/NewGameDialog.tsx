@@ -1,7 +1,7 @@
-import React from 'react';
-import GridSizeSelect from '../GridSizeSelect/GridSizeSelect';
 import Button from '../../ui/Button/Button';
 import Dialog from '../../ui/Dialog/Dialog';
+import GridSizeSelect from '../GridSizeSelect/GridSizeSelect';
+import React from 'react';
 
 export type NewGameDialogProps = {
   onStart: (size: number) => void;
