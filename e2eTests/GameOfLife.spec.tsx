@@ -17,132 +17,123 @@ test.describe('Game of Life', () => {
     await startGame(page);
   });
 
-  test('should display a grid of the correct size', async () => {
-    await verifyGridSize(page, 'grid', 9);
+  test.describe('Grid and Cell UI Elements', () => {
+    test('should display a grid of the correct size', async () => {
+      await verifyGridSize(page, 'grid', 9);
+    });
+
+    test('should correctly toggle cell state on click', async () => {
+      await toggleCell(page, 'cell-0-0');
+    });
   });
 
-  test('should correctly toggle cell state on click', async () => {
-    await toggleCell(page, 'cell-0-0');
+  test.describe('Game Rules', () => {
+    test('should kill lonely cells', async () => {
+      await activateCell(page, 'cell-1-1');
+      await runNextGeneration(page);
+      await verifyDeadCell(page, 'cell-1-1');
+    });
+
+    test('should keep cells alive with 2 or 3 neighbors', async () => {
+      await createStableBlock(page);
+      await runNextGeneration(page);
+      await verifyStableBlock(page);
+    });
+
+    test('should birth new cells with exactly 3 neighbors', async () => {
+      await createLShape(page);
+      await runNextGeneration(page);
+      await verifyNewCell(page, 'cell-2-2');
+    });
+
+    test('should kill overcrowded cells', async () => {
+      await createOvercrowdedCell(page);
+      await runNextGeneration(page);
+      await verifyDeadCell(page, 'cell-1-1');
+    });
   });
 
-  test('should kill lonely cells', async () => {
-    await activateCell(page, 'cell-1-1');
-    await runNextGeneration(page);
-    await verifyDeadCell(page, 'cell-1-1');
+  test.describe('Data Management', () => {
+    test('should export the grid when the "Export to JSON" button is clicked', async () => {
+      await exportGrid(page);
+    });
+
+    test('should import a grid from a JSON file', async () => {
+      await importGrid(page, __dirname);
+    });
   });
 
-  test('should keep cells alive with 2 or 3 neighbors', async () => {
-    await createStableBlock(page);
-    await runNextGeneration(page);
-    await verifyStableBlock(page);
-  });
+  test.describe('Color Behavior', () => {
+    test('should assign random color to isolated cell when activated', async () => {
+      const cell = page.getByTestId('cell-1-1');
+      await cell.click();
 
-  test('should birth new cells with exactly 3 neighbors', async () => {
-    await createLShape(page);
-    await runNextGeneration(page);
-    await verifyNewCell(page, 'cell-2-2');
-  });
+      const backgroundColor = await cell.evaluate(
+        el => window.getComputedStyle(el).backgroundColor,
+      );
+      expect(CELL_COLORS.map(hexToRgb)).toContain(backgroundColor);
+    });
 
-  test('should kill overcrowded cells', async () => {
-    await createOvercrowdedCell(page);
-    await runNextGeneration(page);
-    await verifyDeadCell(page, 'cell-1-1');
-  });
+    test('should inherit color from neighboring cells when born', async () => {
+      // Create two cells with the same color
+      await page.getByTestId('cell-1-1').click();
+      const firstCellColor = await page
+        .getByTestId('cell-1-1')
+        .evaluate(el => window.getComputedStyle(el).backgroundColor);
 
-  test('should export the grid when the "Export to JSON" button is clicked', async () => {
-    await exportGrid(page);
-  });
+      await page.evaluate(
+        ({ color }) => {
+          const cell = document.querySelector('[data-testid="cell-1-2"]');
+          if (cell) (cell as HTMLElement).style.backgroundColor = color;
+        },
+        { color: firstCellColor },
+      );
+      await page.getByTestId('cell-1-2').click();
 
-  test('should import a grid from a JSON file', async () => {
-    await importGrid(page, __dirname);
-  });
+      await page.getByTestId('cell-2-1').click();
+      await runNextGeneration(page);
 
-  test('should assign random color to isolated cell when activated', async () => {
-    const cell = page.getByTestId('cell-1-1');
-    await cell.click();
+      const newCellColor = await page
+        .getByTestId('cell-2-2')
+        .evaluate(el => window.getComputedStyle(el).backgroundColor);
+      expect(newCellColor).toBe(firstCellColor);
+    });
 
-    const backgroundColor = await cell.evaluate(el => window.getComputedStyle(el).backgroundColor);
+    test('should preserve cell colors through generations', async () => {
+      await createStableBlock(page);
+      const initialColors = await getBlockColors(page);
+      await runNextGeneration(page);
+      const newColors = await getBlockColors(page);
+      expect(newColors).toEqual(initialColors);
+    });
 
-    // Check if the color is one of our predefined colors
-    expect(CELL_COLORS.map(hexToRgb)).toContain(backgroundColor);
-  });
+    test('should clear colors when cleaning grid', async () => {
+      await createStableBlock(page);
+      await page.getByRole('button', { name: 'Clean Grid' }).click();
 
-  test('should inherit color from neighboring cells when born', async () => {
-    // Create two cells with the same color
-    await page.getByTestId('cell-1-1').click();
-    const firstCellColor = await page
-      .getByTestId('cell-1-1')
-      .evaluate(el => window.getComputedStyle(el).backgroundColor);
+      const rowCount = 3;
+      const colCount = 3;
 
-    // Manually set second cell to same color for consistent test
-    await page.evaluate(
-      ({ color }) => {
-        const cell = document.querySelector('[data-testid="cell-1-2"]');
-        if (cell) (cell as HTMLElement).style.backgroundColor = color;
-      },
-      { color: firstCellColor },
-    );
-    await page.getByTestId('cell-1-2').click();
-
-    // Create configuration for new cell birth
-    await page.getByTestId('cell-2-1').click();
-    await runNextGeneration(page);
-
-    // Verify new cell (2-2) inherits the color
-    const newCellColor = await page
-      .getByTestId('cell-2-2')
-      .evaluate(el => window.getComputedStyle(el).backgroundColor);
-    expect(newCellColor).toBe(firstCellColor);
-  });
-
-  test('should preserve cell colors through generations', async () => {
-    // Create a stable block
-    await createStableBlock(page);
-
-    // Get initial colors
-    const initialColors = await getBlockColors(page);
-
-    // Run next generation
-    await runNextGeneration(page);
-
-    // Get new colors and compare
-    const newColors = await getBlockColors(page);
-    expect(newColors).toEqual(initialColors);
-  });
-
-  test('should clear colors when cleaning grid', async () => {
-    // Create some colored cells
-    await createStableBlock(page);
-
-    // Clean grid
-    await page.getByRole('button', { name: 'Clean Grid' }).click();
-
-    // Verify all cells are transparent by checking them individually
-    const rowCount = 3; // We know we're using a 3x3 grid
-    const colCount = 3;
-
-    for (let row = 0; row < rowCount; row++) {
-      for (let col = 0; col < colCount; col++) {
-        const cell = page.getByTestId(`cell-${row}-${col}`);
-        const backgroundColor = await cell.evaluate(
-          el => window.getComputedStyle(el).backgroundColor,
-        );
-        expect(isTransparent(backgroundColor)).toBe(true);
+      for (let row = 0; row < rowCount; row++) {
+        for (let col = 0; col < colCount; col++) {
+          const cell = page.getByTestId(`cell-${row}-${col}`);
+          const backgroundColor = await cell.evaluate(
+            el => window.getComputedStyle(el).backgroundColor,
+          );
+          expect(isTransparent(backgroundColor)).toBe(true);
+        }
       }
-    }
+    });
   });
 
-  test('should save and load colors with localStorage', async () => {
-    // Create a pattern with colors
-    await createStableBlock(page);
-    const initialColors = await getBlockColors(page);
-
-    // Reload page
-    await page.reload();
-
-    // Verify colors are preserved
-    const loadedColors = await getBlockColors(page);
-    expect(loadedColors).toEqual(initialColors);
+  test.describe('State Persistence', () => {
+    test('should save and load colors with localStorage', async () => {
+      await createStableBlock(page);
+      const initialColors = await getBlockColors(page);
+      await page.reload();
+      const loadedColors = await getBlockColors(page);
+      expect(loadedColors).toEqual(initialColors);
+    });
   });
 });
 
