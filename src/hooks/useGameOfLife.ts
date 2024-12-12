@@ -2,58 +2,116 @@ import { useState, useCallback } from 'react';
 import type { GridType } from '../components/Grid/types';
 import type { CellType } from '../components/Cell/types';
 
-export const useGameOfLife = (initialSize: number) => {
+interface StoredGameState {
+  grid: GridType;
+  size: number;
+  speed?: number;
+}
+
+// Helper to load saved state from localStorage
+const loadSavedState = (): StoredGameState | null => {
+  try {
+    const stored = localStorage.getItem('gameOfLife');
+    if (stored) {
+      return JSON.parse(stored) as StoredGameState;
+    }
+  } catch (error) {
+    console.error('Error reading from localStorage:', error);
+  }
+  return null;
+};
+
+export const useGameOfLife = (initialSize: number | null = null) => {
+  // Load saved state when hook is initialized
+  const savedState = loadSavedState();
+  const effectiveSize = savedState?.size || initialSize || 20;
+
   const [isPlaying, setIsPlaying] = useState(false);
-  const [grid, setGrid] = useState<GridType>(() =>
-    Array(initialSize)
-      .fill(null)
-      .map(() =>
-        Array(initialSize)
-          .fill(null)
-          .map(() => ({ alive: false }) as CellType),
-      ),
+  const [grid, setGrid] = useState<GridType>(
+    () =>
+      savedState?.grid ||
+      Array(effectiveSize)
+        .fill(null)
+        .map(() =>
+          Array(effectiveSize)
+            .fill(null)
+            .map(() => ({ alive: false }) as CellType),
+        ),
   );
 
-  const resetGame = useCallback((size: number) => {
-    setIsPlaying(false);
-    setGrid(
-      Array(size)
+  // Save grid to localStorage whenever it changes
+  const saveGrid = useCallback((newGrid: GridType) => {
+    try {
+      const gameState: StoredGameState = {
+        grid: newGrid,
+        size: newGrid.length,
+      };
+      localStorage.setItem('gameOfLife', JSON.stringify(gameState));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  }, []);
+
+  // Wrap setGrid to always save when grid changes
+  const updateGrid = useCallback(
+    (newGrid: GridType | ((prev: GridType) => GridType)) => {
+      setGrid(prev => {
+        const nextGrid = typeof newGrid === 'function' ? newGrid(prev) : newGrid;
+        saveGrid(nextGrid);
+        return nextGrid;
+      });
+    },
+    [saveGrid],
+  );
+
+  const resetGame = useCallback(
+    (size: number) => {
+      setIsPlaying(false);
+      const newGrid = Array(size)
         .fill(null)
         .map(() =>
           Array(size)
             .fill(null)
             .map(() => ({ alive: false }) as CellType),
-        ),
-    );
-  }, []);
+        );
+      updateGrid(newGrid);
+    },
+    [updateGrid],
+  );
 
   const cleanGrid = useCallback(() => {
-    setGrid(grid.map(row => row.map(cell => ({ ...cell, alive: false }))));
-  }, [grid]);
+    updateGrid(grid.map(row => row.map(cell => ({ ...cell, alive: false }))));
+  }, [grid, updateGrid]);
 
-  const toggleCell = useCallback((row: number, col: number) => {
-    setGrid(currentGrid => {
-      const newGrid = [...currentGrid];
-      newGrid[row] = [...newGrid[row]];
-      newGrid[row][col] = {
-        ...newGrid[row][col],
-        alive: !newGrid[row][col].alive,
-      };
-      return newGrid;
-    });
-  }, []);
+  const toggleCell = useCallback(
+    (row: number, col: number) => {
+      updateGrid(currentGrid => {
+        const newGrid = [...currentGrid];
+        newGrid[row] = [...newGrid[row]];
+        newGrid[row][col] = {
+          ...newGrid[row][col],
+          alive: !newGrid[row][col].alive,
+        };
+        return newGrid;
+      });
+    },
+    [updateGrid],
+  );
 
-  const setCell = useCallback((row: number, col: number, state: boolean) => {
-    setGrid(currentGrid => {
-      const newGrid = [...currentGrid];
-      newGrid[row] = [...newGrid[row]];
-      newGrid[row][col] = {
-        ...newGrid[row][col],
-        alive: state,
-      };
-      return newGrid;
-    });
-  }, []);
+  const setCell = useCallback(
+    (row: number, col: number, state: boolean) => {
+      updateGrid(currentGrid => {
+        const newGrid = [...currentGrid];
+        newGrid[row] = [...newGrid[row]];
+        newGrid[row][col] = {
+          ...newGrid[row][col],
+          alive: state,
+        };
+        return newGrid;
+      });
+    },
+    [updateGrid],
+  );
 
   const countLiveNeighbors = useCallback((grid: GridType, row: number, col: number): number => {
     let count = 0;
@@ -79,7 +137,7 @@ export const useGameOfLife = (initialSize: number) => {
   }, []);
 
   const nextGeneration = useCallback(() => {
-    setGrid(currentGrid => {
+    updateGrid(currentGrid => {
       return currentGrid.map((row, i) =>
         row.map((cell, j) => {
           const neighbors = countLiveNeighbors(currentGrid, i, j);
@@ -92,7 +150,7 @@ export const useGameOfLife = (initialSize: number) => {
         }),
       );
     });
-  }, [countLiveNeighbors]);
+  }, [countLiveNeighbors, updateGrid]);
 
   const togglePlay = useCallback(() => {
     setIsPlaying(prev => !prev);
@@ -123,8 +181,9 @@ export const useGameOfLife = (initialSize: number) => {
     nextGeneration,
     resetGame,
     setCell,
-    setGrid,
+    setGrid: updateGrid,
     toggleCell,
     togglePlay,
+    savedState, // Add this to let the App component know if there was a saved state
   };
 };
