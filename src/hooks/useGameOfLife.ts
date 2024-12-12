@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { GridType } from '../components/Grid/types';
 import type { CellType } from '../components/Cell/types';
+import { determineCellColor } from '../utils/colorUtils';
 
 interface StoredGameState {
   grid: GridType;
@@ -81,7 +82,7 @@ export const useGameOfLife = (initialSize: number | null = null) => {
         .map(() =>
           Array(size)
             .fill(null)
-            .map(() => ({ alive: false }) as CellType),
+            .map(() => ({ alive: false, color: undefined }) as CellType),
         );
       updateGrid(newGrid, 0);
     },
@@ -91,7 +92,7 @@ export const useGameOfLife = (initialSize: number | null = null) => {
   const cleanGrid = useCallback(() => {
     setGenerationCount(0);
     updateGrid(
-      grid.map(row => row.map(cell => ({ ...cell, alive: false }))),
+      grid.map(row => row.map(cell => ({ ...cell, alive: false, color: undefined }))),
       0,
     );
   }, [grid, updateGrid]);
@@ -101,9 +102,13 @@ export const useGameOfLife = (initialSize: number | null = null) => {
       updateGrid(currentGrid => {
         const newGrid = [...currentGrid];
         newGrid[row] = [...newGrid[row]];
+        const newAliveState = !newGrid[row][col].alive;
+
         newGrid[row][col] = {
           ...newGrid[row][col],
-          alive: !newGrid[row][col].alive,
+          alive: newAliveState,
+          // Only set color if cell becomes alive
+          color: newAliveState ? determineCellColor(currentGrid, row, col) : undefined,
         };
         return newGrid;
       });
@@ -161,11 +166,19 @@ export const useGameOfLife = (initialSize: number | null = null) => {
       const nextGrid = currentGrid.map((row, i) =>
         row.map((cell, j) => {
           const neighbors = countLiveNeighbors(currentGrid, i, j);
+          const willBeAlive = cell.alive
+            ? neighbors === 2 || neighbors === 3 // Survival
+            : neighbors === 3; // Birth
+
           return {
             ...cell,
-            alive: cell.alive
-              ? neighbors === 2 || neighbors === 3 // Survival
-              : neighbors === 3, // Birth
+            alive: willBeAlive,
+            // Determine color for newly born cells
+            color: willBeAlive
+              ? cell.alive
+                ? cell.color // Keep existing color for surviving cells
+                : determineCellColor(currentGrid, i, j, currentGrid) // New color for born cells
+              : undefined, // Remove color for dead cells
           };
         }),
       );
