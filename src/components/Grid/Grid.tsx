@@ -5,13 +5,13 @@ import { Cell } from '../Cell/Cell';
 import { FixedSizeGrid } from 'react-window';
 import { GridProps } from './types';
 
-export function Grid({
+export const Grid = ({
   grid,
   onCellClick,
   onCellDrag,
   onInteractionStart,
   cellSize = 20,
-}: GridProps) {
+}: GridProps) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const lastToggledCell = useRef<{ row: number; col: number } | null>(null);
 
@@ -98,4 +98,4 @@ export function Grid({
       </AutoSizer>
     </div>
   );
-}
+};
