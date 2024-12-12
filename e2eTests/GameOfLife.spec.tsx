@@ -135,6 +135,98 @@ test.describe('Game of Life', () => {
       expect(loadedColors).toEqual(initialColors);
     });
   });
+
+  test.describe('History Navigation', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/');
+      await setupGrid(page, 'grid-size-select', 'select-option-3');
+      await startGame(page);
+    });
+
+    test('should disable navigation buttons initially', async ({ page }) => {
+      await ensureGamePaused(page);
+      expect(await waitForButtonEnabled(page, 'Previous')).toBe(false);
+      expect(await waitForButtonEnabled(page, 'Next')).toBe(false);
+    });
+
+    test('should not allow navigation on empty grid', async ({ page }) => {
+      await createStableBlock(page);
+      await page.getByRole('button', { name: 'Clean Grid' }).click();
+      await ensureGamePaused(page);
+
+      expect(await waitForButtonEnabled(page, 'Previous', 500)).toBe(false);
+      expect(await waitForButtonEnabled(page, 'Next', 500)).toBe(false);
+    });
+
+    test('should maintain cell colors through history navigation', async ({ page }) => {
+      // Create pattern and generate history
+      await createStableBlock(page);
+      const initialColors = await getBlockColors(page);
+
+      // Create navigable history
+      await ensureHistoryExists(page);
+
+      // Navigate back and verify colors
+      await goToPreviousGeneration(page);
+      const colorsAfterNavigation = await getBlockColors(page);
+      expect(colorsAfterNavigation).toEqual(initialColors);
+    });
+
+    test('should handle multiple forward and backward navigation steps', async ({ page }) => {
+      // Create pattern and generate history
+      await createLShape(page);
+
+      // Generate several generations
+      for (let i = 0; i < 3; i++) {
+        await runOneGeneration(page);
+      }
+
+      // Navigate back and verify state
+      await goToPreviousGeneration(page);
+      await goToPreviousGeneration(page);
+
+      // Verify initial L-shape
+      await expect(page.getByTestId('cell-1-1')).toHaveAttribute('data-alive', 'true');
+      await expect(page.getByTestId('cell-1-2')).toHaveAttribute('data-alive', 'true');
+      await expect(page.getByTestId('cell-2-1')).toHaveAttribute('data-alive', 'true');
+    });
+
+    test('should disable forward navigation at latest state', async ({ page }) => {
+      await createLShape(page);
+      await ensureHistoryExists(page);
+
+      await goToPreviousGeneration(page);
+      await goToNextGeneration(page);
+
+      expect(await waitForButtonEnabled(page, 'Next', 500)).toBe(false);
+    });
+
+    test('should disable backward navigation at initial state', async ({ page }) => {
+      await createLShape(page);
+      await ensureHistoryExists(page);
+
+      await goToPreviousGeneration(page);
+      expect(await waitForButtonEnabled(page, 'Previous', 500)).toBe(false);
+    });
+
+    test('should save and restore history state after page reload', async ({ page }) => {
+      // Create pattern and history
+      await createLShape(page);
+      await ensureHistoryExists(page);
+
+      const initialState = await page.getByTestId('cell-1-1').getAttribute('data-alive');
+
+      // Reload and restore
+      await page.reload();
+      await ensureGamePaused(page);
+      await page.waitForTimeout(500);
+
+      // Verify navigation works
+      await goToPreviousGeneration(page);
+      const restoredState = await page.getByTestId('cell-1-1').getAttribute('data-alive');
+      expect(restoredState).toBe(initialState);
+    });
+  });
 });
 
 // Helper functions
@@ -181,9 +273,13 @@ async function activateCell(page: Page, cellTestId: string) {
 }
 
 async function runNextGeneration(page: Page) {
-  const playButton = page.getByTestId('play-button');
-  await playButton.click();
+  await page.getByTestId('play-button').click();
+
   await page.waitForTimeout(600);
+
+  await page.getByTestId('play-button').click();
+
+  await page.waitForTimeout(100);
 }
 
 async function verifyDeadCell(page: Page, cellTestId: string) {
@@ -292,4 +388,69 @@ function hexToRgb(hex: string) {
 
 function isTransparent(color: string): boolean {
   return color === 'transparent' || color === 'rgba(0, 0, 0, 0)';
+}
+
+export async function waitForButtonEnabled(page: Page, name: string, timeout: number = 1000) {
+  const button = page.getByRole('button', { name });
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeout) {
+    const isDisabled = await button.getAttribute('disabled');
+    if (!isDisabled) {
+      return true;
+    }
+    await page.waitForTimeout(100);
+  }
+  return false;
+}
+
+export async function ensureHistoryExists(page: Page) {
+  await runOneGeneration(page);
+  await ensureGamePaused(page);
+  // Wait for history to be updated
+  await page.waitForTimeout(200);
+}
+
+export async function runOneGeneration(page: Page) {
+  // Ensure game is paused initially
+  await ensureGamePaused(page);
+
+  // Start one generation
+  await page.getByTestId('play-button').click();
+
+  // Wait for generation to complete
+  await page.waitForTimeout(600);
+
+  // Pause the game
+  await page.getByTestId('play-button').click();
+
+  // Wait for UI to stabilize
+  await page.waitForTimeout(200);
+}
+
+export async function ensureGamePaused(page: Page) {
+  const button = page.getByTestId('play-button');
+  const isPlaying = await button.getAttribute('data-playing');
+  if (isPlaying === 'true') {
+    await button.click();
+    await page.waitForTimeout(100);
+  }
+}
+
+export async function goToPreviousGeneration(page: Page) {
+  const canGoBack = await waitForButtonEnabled(page, 'Previous');
+  if (!canGoBack) {
+    throw new Error('Previous generation button remained disabled');
+  }
+  await page.getByRole('button', { name: 'Previous' }).click();
+  await page.waitForTimeout(100);
+}
+
+export async function goToNextGeneration(page: Page) {
+  const canGoForward = await waitForButtonEnabled(page, 'Next');
+  if (!canGoForward) {
+    throw new Error('Next generation button remained disabled');
+  }
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.waitForTimeout(100);
 }
