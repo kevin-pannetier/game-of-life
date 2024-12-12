@@ -1,0 +1,6 @@
+{
+  "entry": ["src/**/*.ts", "src/**/*.tsx"],
+  "project": ["tsconfig.json"],
+  "ignore": ["src/**/test-utils.ts"],
+  "dependencies": true
+}
