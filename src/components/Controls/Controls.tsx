@@ -127,7 +127,6 @@ export const Controls = ({
             <span className="text-xs">Speed:</span>
             <ButtonGroup
               size="small"
-              variant="outline"
               options={speedOptions.map(option => option.label)}
               defaultValue={speedOptions.find(option => option.value === speed)?.label}
               value={speedOptions.find(option => option.value === speed)?.label}
