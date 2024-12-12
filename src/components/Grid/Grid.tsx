@@ -4,41 +4,81 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { Cell } from '../Cell/Cell';
 import { FixedSizeGrid } from 'react-window';
 import { GridProps } from './types';
+import throttle from '../../utils/throttle';
 
-export function Grid({
+export const Grid = ({
   grid,
   onCellClick,
   onCellDrag,
   onInteractionStart,
   cellSize = 20,
-}: GridProps) {
+}: GridProps) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const lastToggledCell = useRef<{ row: number; col: number } | null>(null);
 
+  // Create stable throttled functions using useRef
+  const throttledMouseDown = useRef(
+    throttle(
+      (
+        rowIndex: number,
+        columnIndex: number,
+        setIsMouseDown: (value: boolean) => void,
+        onInteractionStart: () => void,
+        onCellClick: (row: number, col: number) => void,
+        lastToggledCell: React.MutableRefObject<{ row: number; col: number } | null>,
+      ) => {
+        setIsMouseDown(true);
+        onInteractionStart();
+        onCellClick(rowIndex, columnIndex);
+        lastToggledCell.current = { row: rowIndex, col: columnIndex };
+      },
+      16,
+    ),
+  ).current;
+
+  const throttledMouseEnter = useRef(
+    throttle(
+      (
+        rowIndex: number,
+        columnIndex: number,
+        isMouseDown: boolean,
+        onCellDrag: (row: number, col: number) => void,
+        lastToggledCell: React.MutableRefObject<{ row: number; col: number } | null>,
+      ) => {
+        if (isMouseDown) {
+          if (
+            !lastToggledCell.current ||
+            lastToggledCell.current.row !== rowIndex ||
+            lastToggledCell.current.col !== columnIndex
+          ) {
+            onCellDrag(rowIndex, columnIndex);
+            lastToggledCell.current = { row: rowIndex, col: columnIndex };
+          }
+        }
+      },
+      16,
+    ),
+  ).current;
+
   const handleMouseDown = useCallback(
-    (rowIndex: number, columnIndex: number) => {
-      setIsMouseDown(true);
-      onInteractionStart();
-      onCellClick(rowIndex, columnIndex);
-      lastToggledCell.current = { row: rowIndex, col: columnIndex };
+    (rowIndex: number, columnIndex: number): void => {
+      throttledMouseDown(
+        rowIndex,
+        columnIndex,
+        setIsMouseDown,
+        onInteractionStart,
+        onCellClick,
+        lastToggledCell,
+      );
     },
-    [onInteractionStart, onCellClick],
+    [throttledMouseDown, onInteractionStart, onCellClick],
   );
 
   const handleMouseEnter = useCallback(
-    (rowIndex: number, columnIndex: number) => {
-      if (isMouseDown) {
-        if (
-          !lastToggledCell.current ||
-          lastToggledCell.current.row !== rowIndex ||
-          lastToggledCell.current.col !== columnIndex
-        ) {
-          onCellDrag(rowIndex, columnIndex);
-          lastToggledCell.current = { row: rowIndex, col: columnIndex };
-        }
-      }
+    (rowIndex: number, columnIndex: number): void => {
+      throttledMouseEnter(rowIndex, columnIndex, isMouseDown, onCellDrag, lastToggledCell);
     },
-    [isMouseDown, onCellDrag],
+    [isMouseDown, onCellDrag, throttledMouseEnter],
   );
 
   const CellRenderer = useCallback(
@@ -89,8 +129,8 @@ export function Grid({
             rowCount={grid.length}
             rowHeight={cellSize}
             width={width}
-            overscanColumnCount={5}
-            overscanRowCount={5}
+            overscanColumnCount={1}
+            overscanRowCount={1}
           >
             {CellRenderer}
           </FixedSizeGrid>
@@ -98,4 +138,4 @@ export function Grid({
       </AutoSizer>
     </div>
   );
-}
+};

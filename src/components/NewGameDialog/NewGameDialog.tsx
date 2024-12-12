@@ -34,7 +34,6 @@ const NewGameDialog = ({ onStart, open, onOpenChange }: NewGameDialogProps) => {
         className="mb-6 w-full font-outfit-regular"
         data-testid="grid-size-select"
       />
-
       <div className="flex justify-end gap-3 font-outfit-regular">
         <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="cancel-button">
           Cancel

@@ -13,12 +13,118 @@ interface StoredGameState {
   currentHistoryIndex?: number;
 }
 
-// Helper to load saved state from localStorage
+// Compressed data structures
+interface CompressedGrid {
+  size: number;
+  liveCells: Array<[number, number, string?]>; // [row, col, color?]
+}
+
+interface CompressedGameState {
+  grid: CompressedGrid;
+  generationCount: number;
+  history?: CompressedGrid[];
+  currentHistoryIndex?: number;
+}
+
+// Helper to compress grid into minimal representation
+const compressGrid = (grid: GridType): CompressedGrid => {
+  const liveCells: Array<[number, number, string?]> = [];
+
+  grid.forEach((row, i) => {
+    row.forEach((cell, j) => {
+      if (cell.alive) {
+        liveCells.push([i, j, cell.color]);
+      }
+    });
+  });
+
+  return {
+    size: grid.length,
+    liveCells,
+  };
+};
+
+// Helper to decompress grid back to full representation
+const decompressGrid = (compressed: CompressedGrid): GridType => {
+  const grid = Array(compressed.size)
+    .fill(null)
+    .map(() =>
+      Array(compressed.size)
+        .fill(null)
+        .map(() => ({ alive: false }) as CellType),
+    );
+
+  compressed.liveCells.forEach(([row, col, color]) => {
+    grid[row][col] = { alive: true, color };
+  });
+
+  return grid;
+};
+
+// Helper to save state with compression and chunking
+const saveGameState = (state: StoredGameState): void => {
+  try {
+    // Compress the current state
+    const compressed: CompressedGameState = {
+      grid: compressGrid(state.grid),
+      generationCount: state.generationCount,
+      currentHistoryIndex: state.currentHistoryIndex,
+    };
+
+    // Only store last 50 states in history
+    if (state.history) {
+      compressed.history = state.history.slice(-50).map(compressGrid);
+    }
+
+    // Split into chunks if needed
+    const serialized = JSON.stringify(compressed);
+    const maxChunkSize = 1024 * 1024; // 1MB chunks
+
+    if (serialized.length > maxChunkSize) {
+      const chunks = Math.ceil(serialized.length / maxChunkSize);
+      for (let i = 0; i < chunks; i++) {
+        const chunk = serialized.slice(i * maxChunkSize, (i + 1) * maxChunkSize);
+        localStorage.setItem(`gameOfLife_chunk_${i}`, chunk);
+      }
+      localStorage.setItem('gameOfLife_chunks', chunks.toString());
+    } else {
+      localStorage.setItem('gameOfLife', serialized);
+      localStorage.removeItem('gameOfLife_chunks');
+    }
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+};
+
+// Helper to load saved state with decompression and chunk handling
 const loadSavedState = (): StoredGameState | null => {
   try {
-    const stored = localStorage.getItem('gameOfLife');
+    // Check if state was stored in chunks
+    const chunks = localStorage.getItem('gameOfLife_chunks');
+    let stored: string | null;
+
+    if (chunks) {
+      // Reassemble chunks
+      stored = '';
+      const numChunks = parseInt(chunks, 10);
+      for (let i = 0; i < numChunks; i++) {
+        const chunk = localStorage.getItem(`gameOfLife_chunk_${i}`);
+        if (!chunk) throw new Error('Missing chunk');
+        stored += chunk;
+      }
+    } else {
+      stored = localStorage.getItem('gameOfLife');
+    }
+
     if (stored) {
-      return JSON.parse(stored) as StoredGameState;
+      const compressed = JSON.parse(stored) as CompressedGameState;
+      return {
+        grid: decompressGrid(compressed.grid),
+        size: compressed.grid.size,
+        generationCount: compressed.generationCount,
+        history: compressed.history?.map(decompressGrid),
+        currentHistoryIndex: compressed.currentHistoryIndex,
+      };
     }
   } catch (error) {
     console.error('Error reading from localStorage:', error);
@@ -36,7 +142,7 @@ export const useGameOfLife = (initialSize: number | null = null) => {
   const savedState = loadSavedState();
   const effectiveSize = savedState?.size || initialSize || 20;
 
-  // Initialize grid first
+  // Initialize grid
   const initialGrid =
     savedState?.grid ||
     Array(effectiveSize)
@@ -51,7 +157,7 @@ export const useGameOfLife = (initialSize: number | null = null) => {
   const [generationCount, setGenerationCount] = useState(savedState?.generationCount || 0);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Initialize history with the initial grid
+  // Initialize history
   const [history, setHistory] = useState<GridType[]>(() => {
     if (savedState?.history && Array.isArray(savedState.history)) {
       return savedState.history;
@@ -70,25 +176,6 @@ export const useGameOfLife = (initialSize: number | null = null) => {
   const areGridsDifferent = useCallback((grid1: GridType, grid2: GridType): boolean => {
     return grid1.some((row, i) => row.some((cell, j) => cell.alive !== grid2[i][j].alive));
   }, []);
-
-  // Save state including history
-  const saveGrid = useCallback(
-    (newGrid: GridType, generations: number, newHistory: GridType[], historyIndex: number) => {
-      try {
-        const gameState: StoredGameState = {
-          grid: newGrid,
-          size: newGrid.length,
-          generationCount: generations,
-          history: newHistory,
-          currentHistoryIndex: historyIndex,
-        };
-        localStorage.setItem('gameOfLife', JSON.stringify(gameState));
-      } catch (error) {
-        console.error('Error saving to localStorage:', error);
-      }
-    },
-    [],
-  );
 
   // Modified updateGrid to handle history and changes
   const updateGrid = useCallback(
@@ -126,12 +213,20 @@ export const useGameOfLife = (initialSize: number | null = null) => {
 
         setHistory(newHistory);
         setCurrentHistoryIndex(newHistoryIndex);
-        saveGrid(nextGrid, nextGenCount, newHistory, newHistoryIndex);
+
+        // Save with compression
+        saveGameState({
+          grid: nextGrid,
+          size: nextGrid.length,
+          generationCount: nextGenCount,
+          history: newHistory,
+          currentHistoryIndex: newHistoryIndex,
+        });
 
         return nextGrid;
       });
     },
-    [saveGrid, generationCount, history, currentHistoryIndex, isPlaying, areGridsDifferent],
+    [generationCount, history, currentHistoryIndex, isPlaying, areGridsDifferent],
   );
 
   const toggleCell = useCallback(
@@ -237,16 +332,21 @@ export const useGameOfLife = (initialSize: number | null = null) => {
     URL.revokeObjectURL(url);
   }, [grid]);
 
-  // Navigation through history
   const goToPreviousGeneration = useCallback(() => {
     if (currentHistoryIndex > 0) {
       const newIndex = currentHistoryIndex - 1;
       setCurrentHistoryIndex(newIndex);
       setGrid(history[newIndex]);
       setGenerationCount(newIndex);
-      saveGrid(history[newIndex], newIndex, history, newIndex);
+      saveGameState({
+        grid: history[newIndex],
+        size: history[newIndex].length,
+        generationCount: newIndex,
+        history,
+        currentHistoryIndex: newIndex,
+      });
     }
-  }, [currentHistoryIndex, history, saveGrid]);
+  }, [currentHistoryIndex, history]);
 
   const goToNextGeneration = useCallback(() => {
     if (currentHistoryIndex < history.length - 1 && hasLiveCells(history[currentHistoryIndex])) {
@@ -254,28 +354,37 @@ export const useGameOfLife = (initialSize: number | null = null) => {
       setCurrentHistoryIndex(newIndex);
       setGrid(history[newIndex]);
       setGenerationCount(newIndex);
-      saveGrid(history[newIndex], newIndex, history, newIndex);
+      saveGameState({
+        grid: history[newIndex],
+        size: history[newIndex].length,
+        generationCount: newIndex,
+        history,
+        currentHistoryIndex: newIndex,
+      });
     }
-  }, [currentHistoryIndex, history, saveGrid]);
+  }, [currentHistoryIndex, history]);
 
-  const resetGame = useCallback(
-    (size: number) => {
-      setIsPlaying(false);
-      setGenerationCount(0);
-      const newGrid = Array(size)
-        .fill(null)
-        .map(() =>
-          Array(size)
-            .fill(null)
-            .map(() => ({ alive: false, color: undefined })),
-        );
-      setHistory([newGrid]);
-      setCurrentHistoryIndex(0);
-      setGrid(newGrid);
-      saveGrid(newGrid, 0, [newGrid], 0);
-    },
-    [saveGrid],
-  );
+  const resetGame = useCallback((size: number) => {
+    setIsPlaying(false);
+    setGenerationCount(0);
+    const newGrid = Array(size)
+      .fill(null)
+      .map(() =>
+        Array(size)
+          .fill(null)
+          .map(() => ({ alive: false, color: undefined })),
+      );
+    setHistory([newGrid]);
+    setCurrentHistoryIndex(0);
+    setGrid(newGrid);
+    saveGameState({
+      grid: newGrid,
+      size,
+      generationCount: 0,
+      history: [newGrid],
+      currentHistoryIndex: 0,
+    });
+  }, []);
 
   const cleanGrid = useCallback(() => {
     const newGrid = grid.map(row => row.map(cell => ({ ...cell, alive: false, color: undefined })));
@@ -283,8 +392,14 @@ export const useGameOfLife = (initialSize: number | null = null) => {
     setCurrentHistoryIndex(0);
     setGenerationCount(0);
     setGrid(newGrid);
-    saveGrid(newGrid, 0, [newGrid], 0);
-  }, [grid, saveGrid]);
+    saveGameState({
+      grid: newGrid,
+      size: newGrid.length,
+      generationCount: 0,
+      history: [newGrid],
+      currentHistoryIndex: 0,
+    });
+  }, [grid]);
 
   return {
     cleanGrid,
@@ -299,7 +414,6 @@ export const useGameOfLife = (initialSize: number | null = null) => {
     togglePlay,
     savedState,
     generationCount,
-    // Time travel functions
     goToPreviousGeneration,
     goToNextGeneration,
     canGoBack: currentHistoryIndex > 0,
