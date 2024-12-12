@@ -90,9 +90,4 @@ This project leverages the following technologies:
 ## Current Issues
 
 - **Performance on Large Grids**:
-  - The simulation may slow down significantly for grid sizes larger than 50x50.
-  - This is due to the computational overhead of calculating live neighbors and updating the grid.
-  - Future improvements could include:
-    - Optimizing neighbor calculations using data structures like quadtrees.
-    - Leveraging Web Workers to offload computations.
-    - Implementing a virtualized grid to render only visible cells.
+  - The simulation may slow down significantly for grid sizes larger than 100x100, a migration to a Canvas based solution is ongoing, to try to display a 1000x1000 grid (disabled for now)

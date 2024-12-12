@@ -1,8 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { Cell } from '../Cell/Cell';
-import { FixedSizeGrid } from 'react-window';
 import { GridProps } from './types';
 import throttle from '../../utils/throttle';
 
@@ -15,8 +12,8 @@ export const Grid = ({
 }: GridProps) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const lastToggledCell = useRef<{ row: number; col: number } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Create stable throttled functions using useRef
   const throttledMouseDown = useRef(
     throttle(
       (
@@ -60,8 +57,45 @@ export const Grid = ({
     ),
   ).current;
 
+  const drawGrid = useCallback(
+    (context: CanvasRenderingContext2D) => {
+      const width = grid[0].length * cellSize;
+      const height = grid.length * cellSize;
+      const darkColor = 'rgb(24 24 27 / 100%)';
+
+      // Black background
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = darkColor;
+      context.fillRect(0, 0, width, height);
+
+      // Draw cells
+      for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+        for (let columnIndex = 0; columnIndex < grid[0].length; columnIndex++) {
+          const cell = grid[rowIndex][columnIndex];
+          const x = columnIndex * cellSize;
+          const y = rowIndex * cellSize;
+
+          context.fillStyle = cell.alive ? cell.color || '#fff' : darkColor;
+          context.fillRect(x, y, cellSize, cellSize);
+          context.strokeStyle = '#666'; // Grid lines
+          context.strokeRect(x, y, cellSize, cellSize);
+        }
+      }
+    },
+    [grid, cellSize],
+  );
+
   const handleMouseDown = useCallback(
-    (rowIndex: number, columnIndex: number): void => {
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const columnIndex = Math.floor(x / cellSize);
+      const rowIndex = Math.floor(y / cellSize);
+
       throttledMouseDown(
         rowIndex,
         columnIndex,
@@ -71,43 +105,55 @@ export const Grid = ({
         lastToggledCell,
       );
     },
-    [throttledMouseDown, onInteractionStart, onCellClick],
+    [cellSize, throttledMouseDown, onInteractionStart, onCellClick],
   );
 
-  const handleMouseEnter = useCallback(
-    (rowIndex: number, columnIndex: number): void => {
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!isMouseDown) return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const columnIndex = Math.floor(x / cellSize);
+      const rowIndex = Math.floor(y / cellSize);
+
       throttledMouseEnter(rowIndex, columnIndex, isMouseDown, onCellDrag, lastToggledCell);
     },
-    [isMouseDown, onCellDrag, throttledMouseEnter],
+    [cellSize, isMouseDown, throttledMouseEnter, onCellDrag],
   );
 
-  const CellRenderer = useCallback(
-    ({
-      columnIndex,
-      rowIndex,
-      style,
-    }: {
-      columnIndex: number;
-      rowIndex: number;
-      style: React.CSSProperties;
-    }) => (
-      <div style={{ ...style, padding: 1 }}>
-        <Cell
-          row={rowIndex}
-          col={columnIndex}
-          alive={grid[rowIndex][columnIndex].alive}
-          color={grid[rowIndex][columnIndex].color}
-          onMouseDown={handleMouseDown}
-          onMouseEnter={handleMouseEnter}
-        />
-      </div>
-    ),
-    [grid, handleMouseDown, handleMouseEnter],
-  );
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    // Set canvas dimensions to grid dimensions
+    canvas.width = grid[0].length * cellSize;
+    canvas.height = grid.length * cellSize;
+
+    drawGrid(context);
+  }, [drawGrid, grid, cellSize]);
+
+  // Force a redraw whenever grid changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    drawGrid(context);
+  }, [grid, drawGrid]);
 
   return (
     <div
-      className="w-full h-[80vh] rounded"
+      className="w-full h-[80vh] rounded overflow-auto"
       onMouseUp={() => {
         setIsMouseDown(false);
         lastToggledCell.current = null;
@@ -116,26 +162,21 @@ export const Grid = ({
         setIsMouseDown(false);
         lastToggledCell.current = null;
       }}
-      data-testid="grid"
-      aria-label="Game of Life Grid"
+      data-testid="grid-canvas"
+      aria-label="Game of Life Grid Canvas"
+      style={{ overflow: 'auto' }}
     >
-      <AutoSizer>
-        {({ height, width }) => (
-          <FixedSizeGrid
-            className="Grid"
-            columnCount={grid[0].length}
-            columnWidth={cellSize}
-            height={height}
-            rowCount={grid.length}
-            rowHeight={cellSize}
-            width={width}
-            overscanColumnCount={1}
-            overscanRowCount={1}
-          >
-            {CellRenderer}
-          </FixedSizeGrid>
-        )}
-      </AutoSizer>
+      <canvas
+        ref={canvasRef}
+        style={{
+          display: 'block',
+          backgroundColor: '#000',
+          width: `${grid[0].length * cellSize}px`,
+          height: `${grid.length * cellSize}px`,
+        }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+      />
     </div>
   );
 };
