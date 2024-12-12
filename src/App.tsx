@@ -9,10 +9,6 @@ import './index.css';
 import { GridType } from './components/Grid/types';
 
 export const App = () => {
-  const [dialogOpen, setDialogOpen] = useState(true);
-  const [gridSize, setGridSize] = useState<number | null>(null);
-  const [speed, setSpeed] = useState(500);
-
   const {
     grid,
     isPlaying,
@@ -23,7 +19,14 @@ export const App = () => {
     exportGrid,
     setGrid,
     cleanGrid,
-  } = useGameOfLife(gridSize || 20);
+    savedState,
+  } = useGameOfLife(null); // Pass null to let the hook handle initial size
+
+  const [dialogOpen, setDialogOpen] = useState(!savedState);
+  const [speed, setSpeed] = useState(savedState?.speed || 500);
+  const [gridSize, setGridSize] = useState<number | null>(
+    savedState ? savedState.grid.length : null,
+  );
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval>;
