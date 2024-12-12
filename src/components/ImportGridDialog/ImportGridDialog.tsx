@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import Dialog from '../../ui/Dialog/Dialog';
+
 import Button from '../../ui/Button/Button';
+import Dialog from '../../ui/Dialog/Dialog';
 
 export type ImportGridDialogProps = {
   onImport: (grid: { alive: boolean }[][]) => void;

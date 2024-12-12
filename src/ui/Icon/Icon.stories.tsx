@@ -1,5 +1,6 @@
-import { Meta, StoryObj } from '@storybook/react';
 import Icon, { IconPropsExtended } from './Icon';
+import { Meta, StoryObj } from '@storybook/react';
+
 import { StarIcon } from '@radix-ui/react-icons';
 
 const meta: Meta<IconPropsExtended> = {

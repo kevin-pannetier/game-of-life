@@ -1,7 +1,9 @@
-import React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import classNames from 'classnames';
+
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
+
+import React from 'react';
+import classNames from 'classnames';
 
 export type SelectOption = {
   value: string;

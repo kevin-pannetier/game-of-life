@@ -1,5 +1,5 @@
-import { Meta, StoryObj } from '@storybook/react';
 import ButtonGroup, { ButtonGroupProps } from './ButtonGroup';
+import { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta<ButtonGroupProps> = {
   title: 'Ui/ButtonGroup',

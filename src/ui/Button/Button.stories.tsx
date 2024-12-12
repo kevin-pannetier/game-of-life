@@ -1,6 +1,6 @@
-import { Meta, StoryObj } from '@storybook/react';
 import Button, { ButtonProps } from './Button';
-import { StarIcon, CheckIcon } from '@radix-ui/react-icons';
+import { CheckIcon, StarIcon } from '@radix-ui/react-icons';
+import { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta<ButtonProps> = {
   title: 'Ui/Button',

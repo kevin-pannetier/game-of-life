@@ -1,19 +1,21 @@
-import { useEffect, useState } from 'react';
-import Button from '../../ui/Button/Button';
 import {
-  PlayIcon,
-  PauseIcon,
-  DownloadIcon,
-  UploadIcon,
-  TrashIcon,
-  QuestionMarkCircledIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  DownloadIcon,
+  PauseIcon,
+  PlayIcon,
+  QuestionMarkCircledIcon,
+  TrashIcon,
+  UploadIcon,
 } from '@radix-ui/react-icons';
-import ImportGridDialog from '../ImportGridDialog/ImportGridDialog';
+import { useEffect, useState } from 'react';
+
+import Button from '../../ui/Button/Button';
+import ButtonGroup from '../../ui/ButtonGroup/ButtonGroup';
 import { GridType } from '../Grid/types';
 import Icon from '../../ui/Icon/Icon';
-import ButtonGroup from '../../ui/ButtonGroup/ButtonGroup';
+import ImportGridDialog from '../ImportGridDialog/ImportGridDialog';
+import ShortcutInfoDialog from '../ShortcutInfoDialog/ShortcutInfoDialog';
 
 export type ControlsProps = {
   isPlaying: boolean;
@@ -29,8 +31,6 @@ export type ControlsProps = {
   canGoBack: boolean;
   canGoForward: boolean;
 };
-
-import ShortcutInfoDialog from '../ShortcutInfoDialog/ShortcutInfoDialog';
 
 export const Controls = ({
   isPlaying,
@@ -127,7 +127,6 @@ export const Controls = ({
             <span className="text-xs">Speed:</span>
             <ButtonGroup
               size="small"
-              variant="outline"
               options={speedOptions.map(option => option.label)}
               defaultValue={speedOptions.find(option => option.value === speed)?.label}
               value={speedOptions.find(option => option.value === speed)?.label}

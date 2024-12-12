@@ -1,7 +1,8 @@
-import React, { ButtonHTMLAttributes } from 'react';
-import classNames from 'classnames';
 import Icon, { IconComponent } from '../Icon/Icon';
+import React, { ButtonHTMLAttributes } from 'react';
+
 import { ReloadIcon } from '@radix-ui/react-icons';
+import classNames from 'classnames';
 
 export type ButtonProps = {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
@@ -28,7 +29,7 @@ const Button = ({
     'inline-flex items-center justify-center rounded font-outfit-regular focus:outline-none focus:ring-2 transition-all gap-2',
     {
       // Variants
-      'bg-zinc-800 text-white hover:bg-zinc-850 focus:ring-zinc-500': variant === 'primary',
+      'bg-zinc-700 text-white hover:bg-zinc-850 focus:ring-zinc-500': variant === 'primary',
       'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-300': variant === 'secondary',
       'border border-gray-500 text-gray-500 hover:bg-gray-100 focus:ring-gray-300':
         variant === 'outline',

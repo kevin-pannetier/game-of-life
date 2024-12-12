@@ -1,4 +1,4 @@
-import { test, Page, expect } from '@playwright/test';
+import { Page, expect, test } from '@playwright/test';
 import {
   createStableBlock,
   getBlockColors,
@@ -8,6 +8,7 @@ import {
   setupGrid,
   startGame,
 } from './helpers';
+
 import { CELL_COLORS } from '../src/utils/colorUtils';
 
 test.describe('Game of Life', () => {

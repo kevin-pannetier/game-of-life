@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
-import { FixedSizeGrid } from 'react-window';
+
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Cell } from '../Cell/Cell';
+import { FixedSizeGrid } from 'react-window';
 import { GridProps } from './types';
 
 export function Grid({
