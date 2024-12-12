@@ -7,6 +7,8 @@ import {
   UploadIcon,
   TrashIcon,
   QuestionMarkCircledIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@radix-ui/react-icons';
 import ImportGridDialog from '../ImportGridDialog/ImportGridDialog';
 import { GridType } from '../Grid/types';
@@ -22,6 +24,10 @@ export type ControlsProps = {
   onImport: (grid: GridType) => void;
   onClean: () => void;
   setNewGameDialogOpen: (open: boolean) => void;
+  onPreviousGeneration: () => void;
+  onNextGeneration: () => void;
+  canGoBack: boolean;
+  canGoForward: boolean;
 };
 
 import ShortcutInfoDialog from '../ShortcutInfoDialog/ShortcutInfoDialog';
@@ -35,6 +41,10 @@ export const Controls = ({
   onImport,
   onClean,
   setNewGameDialogOpen,
+  onPreviousGeneration,
+  onNextGeneration,
+  canGoBack,
+  canGoForward,
 }: ControlsProps) => {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isShortcutDialogOpen, setShortcutDialogOpen] = useState(false);
@@ -81,13 +91,33 @@ export const Controls = ({
       if (event.code === 'KeyK') {
         setShortcutDialogOpen(true);
       }
+
+      if (!isPlaying) {
+        if (event.code === 'ArrowLeft' && canGoBack) {
+          onPreviousGeneration();
+        }
+        if (event.code === 'ArrowRight' && canGoForward) {
+          onNextGeneration();
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [onClean, onExport, onSpeedChange, onTogglePlay, setNewGameDialogOpen]);
+  }, [
+    canGoBack,
+    canGoForward,
+    isPlaying,
+    onClean,
+    onExport,
+    onNextGeneration,
+    onPreviousGeneration,
+    onSpeedChange,
+    onTogglePlay,
+    setNewGameDialogOpen,
+  ]);
 
   return (
     <div className="bg-zinc-950 text-white py-2 fixed bottom-0 left-0 right-0">
@@ -114,7 +144,18 @@ export const Controls = ({
           </div>
         </div>
 
-        <div className="absolute left-1/2 transform -translate-x-1/2">
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+          <Button
+            size="small"
+            variant="outline"
+            onClick={onPreviousGeneration}
+            disabled={isPlaying || !canGoBack}
+            icons={{ before: ChevronLeftIcon }}
+            className="mr-2"
+          >
+            Previous
+          </Button>
+
           <Button
             size="large"
             variant="primary"
@@ -123,6 +164,17 @@ export const Controls = ({
             className="w-16 h-16 rounded-full flex items-center justify-center focus:outline-none transition-transform duration-200 ease-in-out transform hover:scale-110 hover:-translate-y-1"
           >
             <Icon Icon={isPlaying ? PauseIcon : PlayIcon} size="large" />
+          </Button>
+
+          <Button
+            size="small"
+            variant="outline"
+            onClick={onNextGeneration}
+            disabled={isPlaying || !canGoForward}
+            icons={{ before: ChevronRightIcon }}
+            className="ml-2"
+          >
+            Next
           </Button>
         </div>
 

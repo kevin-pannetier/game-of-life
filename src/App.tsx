@@ -21,6 +21,10 @@ export const App = () => {
     cleanGrid,
     savedState,
     generationCount,
+    goToPreviousGeneration,
+    goToNextGeneration,
+    canGoBack,
+    canGoForward,
   } = useGameOfLife(null); // Pass null to let the hook handle initial size
 
   const [dialogOpen, setDialogOpen] = useState(!savedState);
@@ -93,6 +97,7 @@ export const App = () => {
           </h1>
           <div className="text-xl font-pixelate-regular">Generation: {generationCount}</div>
           <Button
+            size="small"
             variant="outline"
             onClick={() => setDialogOpen(true)}
             icons={{ before: PlayIcon }}
@@ -130,6 +135,10 @@ export const App = () => {
                 onImport={handleImport}
                 onClean={cleanGrid}
                 setNewGameDialogOpen={setDialogOpen}
+                onPreviousGeneration={goToPreviousGeneration}
+                onNextGeneration={goToNextGeneration}
+                canGoBack={canGoBack}
+                canGoForward={canGoForward}
               />
             </div>
           </div>

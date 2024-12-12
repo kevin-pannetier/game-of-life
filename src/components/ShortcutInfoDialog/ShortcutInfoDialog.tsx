@@ -17,7 +17,8 @@ const ShortcutInfoDialog = ({ open, onOpenChange }: ShortcutInfoDialogProps) => 
     { key: 'I', action: 'Open the Import Grid dialog' },
     { key: 'C', action: 'Clean the grid' },
     { key: 'Esc', action: 'Open the New Game dialog' },
-    { key: '←↑→↓', action: 'Scroll the grid - only on overflowing grids' },
+    { key: '←', action: 'Go to previous generation' },
+    { key: '→', action: 'Go to next generation' },
   ];
 
   return (

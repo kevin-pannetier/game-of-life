@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2eTests', // Directory for Playwright tests
-  timeout: 30 * 1000, // Maximum test timeout
+  timeout: 5 * 1000, // Maximum test timeout
   use: {
     headless: true, // Run tests in headless mode
     baseURL: 'http://localhost:5173', // Update to your app's base URL

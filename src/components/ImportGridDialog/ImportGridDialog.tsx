@@ -56,7 +56,7 @@ const ImportGridDialog = ({ onImport, open, onOpenChange }: ImportGridDialogProp
         />
         <label
           htmlFor="file-upload"
-          className="inline-block bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600"
+          className="inline-block bg-zinc-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-zinc-600"
           data-testid="file-label"
         >
           Select File
