@@ -79,6 +79,12 @@ export const Grid = ({
           context.fillRect(x, y, cellSize, cellSize);
           context.strokeStyle = '#666'; // Grid lines
           context.strokeRect(x, y, cellSize, cellSize);
+
+          // Add a way to test this cell
+          context.canvas.setAttribute(
+            `data-testid-cell-${rowIndex}-${columnIndex}`,
+            JSON.stringify({ alive: cell.alive, color: cell.color }),
+          );
         }
       }
     },
@@ -176,6 +182,7 @@ export const Grid = ({
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
+        data-testid="grid-canvas"
       />
     </div>
   );
