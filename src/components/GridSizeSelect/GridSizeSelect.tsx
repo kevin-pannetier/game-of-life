@@ -13,7 +13,7 @@ const GridSizeSelect = ({ onSizeSelect, className }: GridSizeSelectProps) => {
     { value: '20', label: '20x20 (Medium)' },
     { value: '50', label: '50x50 (Large)' },
     { value: '100', label: '100x100 (Extra Large)' },
-    // { value: '1000', label: '1000x1000 (Maximum)' }, TODO: Uncomment this line when perf issues are resolved
+    { value: '1000', label: '1000x1000 (Maximum)' },
   ];
 
   const handleSizeChange = (value: string) => {
