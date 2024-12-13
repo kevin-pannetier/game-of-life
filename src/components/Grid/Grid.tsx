@@ -5,6 +5,18 @@ import { GridProps } from './types';
 import { isPlaywrightExecutionContext } from '../../utils/playwright';
 import throttle from '../../utils/throttle';
 
+interface CellPosition {
+  row: number;
+  col: number;
+}
+
+interface ViewportRange {
+  startRow: number;
+  endRow: number;
+  startCol: number;
+  endCol: number;
+}
+
 export const Grid = ({
   grid,
   onCellClick,
@@ -13,72 +25,110 @@ export const Grid = ({
   cellSize = 20,
 }: GridProps) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const lastToggledCell = useRef<{ row: number; col: number } | null>(null);
+  const lastToggledCell = useRef<CellPosition | null>(null);
+  const lastMousePosition = useRef<{ x: number; y: number } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const viewportRef = useRef<ViewportRange | null>(null);
+  const pendingDraw = useRef<boolean>(false);
 
   // Adjust cell size for large grids
   const adjustedCellSize = grid.length === 1000 ? cellSize / 2 : cellSize;
 
-  const throttledMouseDown = useRef(
-    throttle(
-      (
-        rowIndex: number,
-        columnIndex: number,
-        setIsMouseDown: (value: boolean) => void,
-        onInteractionStart: () => void,
-        onCellClick: (row: number, col: number) => void,
-        lastToggledCell: React.MutableRefObject<{ row: number; col: number } | null>,
-      ) => {
-        setIsMouseDown(true);
-        onInteractionStart();
-        onCellClick(rowIndex, columnIndex);
-        lastToggledCell.current = { row: rowIndex, col: columnIndex };
-      },
-      16,
-    ),
-  ).current;
+  const getViewportRange = useCallback((): ViewportRange => {
+    const container = containerRef.current;
+    if (!container) {
+      return {
+        startRow: 0,
+        endRow: grid.length,
+        startCol: 0,
+        endCol: grid[0].length,
+      };
+    }
 
-  const throttledMouseEnter = useRef(
-    throttle(
-      (
-        rowIndex: number,
-        columnIndex: number,
-        isMouseDown: boolean,
-        onCellDrag: (row: number, col: number) => void,
-        lastToggledCell: React.MutableRefObject<{ row: number; col: number } | null>,
-      ) => {
-        if (isMouseDown) {
-          if (
-            !lastToggledCell.current ||
-            lastToggledCell.current.row !== rowIndex ||
-            lastToggledCell.current.col !== columnIndex
-          ) {
-            onCellDrag(rowIndex, columnIndex);
-            lastToggledCell.current = { row: rowIndex, col: columnIndex };
-          }
+    const { scrollTop, scrollLeft, clientHeight, clientWidth } = container;
+    const buffer = 10; // Buffer cells to render outside viewport
+
+    const viewport = {
+      startRow: Math.max(0, Math.floor(scrollTop / adjustedCellSize) - buffer),
+      endRow: Math.min(
+        grid.length,
+        Math.ceil((scrollTop + clientHeight) / adjustedCellSize) + buffer,
+      ),
+      startCol: Math.max(0, Math.floor(scrollLeft / adjustedCellSize) - buffer),
+      endCol: Math.min(
+        grid[0].length,
+        Math.ceil((scrollLeft + clientWidth) / adjustedCellSize) + buffer,
+      ),
+    };
+
+    viewportRef.current = viewport;
+    return viewport;
+  }, [adjustedCellSize, grid]);
+
+  const predictIntermediateCells = useCallback(
+    (currentX: number, currentY: number, previousX: number, previousY: number): CellPosition[] => {
+      const positions: CellPosition[] = [];
+      const canvas = canvasRef.current;
+      if (!canvas) return positions;
+
+      const rect = canvas.getBoundingClientRect();
+      const startX = previousX - rect.left;
+      const startY = previousY - rect.top;
+      const endX = currentX - rect.left;
+      const endY = currentY - rect.top;
+
+      // Calculate steps based on distance
+      const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+      const steps = Math.max(1, Math.floor(distance / (adjustedCellSize / 2)));
+
+      for (let i = 0; i <= steps; i++) {
+        const x = startX + ((endX - startX) * i) / steps;
+        const y = startY + ((endY - startY) * i) / steps;
+
+        const col = Math.floor(x / adjustedCellSize);
+        const row = Math.floor(y / adjustedCellSize);
+
+        if (
+          row >= 0 &&
+          row < grid.length &&
+          col >= 0 &&
+          col < grid[0].length &&
+          (!positions.length ||
+            positions[positions.length - 1].row !== row ||
+            positions[positions.length - 1].col !== col)
+        ) {
+          positions.push({ row, col });
         }
-      },
-      16,
-    ),
-  ).current;
+      }
+
+      return positions;
+    },
+    [adjustedCellSize, grid],
+  );
 
   const drawGridLines = useCallback(
-    (context: CanvasRenderingContext2D, width: number, height: number) => {
+    (context: CanvasRenderingContext2D, viewport: ViewportRange) => {
+      const { startRow, endRow, startCol, endCol } = viewport;
+      const startX = startCol * adjustedCellSize;
+      const startY = startRow * adjustedCellSize;
+      const width = (endCol - startCol) * adjustedCellSize;
+      const height = (endRow - startRow) * adjustedCellSize;
+
       context.beginPath();
       context.strokeStyle = '#333333';
       context.lineWidth = 1;
 
       // Draw vertical lines
-      for (let x = 0; x <= width; x += adjustedCellSize) {
-        context.moveTo(x, 0);
-        context.lineTo(x, height);
+      for (let x = startX; x <= startX + width; x += adjustedCellSize) {
+        context.moveTo(x, startY);
+        context.lineTo(x, startY + height);
       }
 
       // Draw horizontal lines
-      for (let y = 0; y <= height; y += adjustedCellSize) {
-        context.moveTo(0, y);
-        context.lineTo(width, y);
+      for (let y = startY; y <= startY + height; y += adjustedCellSize) {
+        context.moveTo(startX, y);
+        context.lineTo(startX + width, y);
       }
 
       context.stroke();
@@ -86,48 +136,68 @@ export const Grid = ({
     [adjustedCellSize],
   );
 
-  const drawGrid = useCallback(
-    (context: CanvasRenderingContext2D) => {
-      const width = grid[0].length * adjustedCellSize;
-      const height = grid.length * adjustedCellSize;
+  const drawVisibleCells = useCallback(
+    (context: CanvasRenderingContext2D, viewport: ViewportRange) => {
+      const { startRow, endRow, startCol, endCol } = viewport;
 
-      // Clear canvas with background color
+      // Clear visible area
+      const clearX = startCol * adjustedCellSize;
+      const clearY = startRow * adjustedCellSize;
+      const clearWidth = (endCol - startCol) * adjustedCellSize;
+      const clearHeight = (endRow - startRow) * adjustedCellSize;
+
       context.fillStyle = '#000000';
-      context.fillRect(0, 0, width, height);
+      context.fillRect(clearX, clearY, clearWidth, clearHeight);
 
-      // Draw grid lines first
-      drawGridLines(context, width, height);
+      // Draw grid lines for visible area
+      drawGridLines(context, viewport);
 
-      if (isPlaywrightExecutionContext()) {
-        context.canvas.setAttribute('data-grid-size', grid.length.toString());
-      }
+      // Batch draw alive cells
+      const aliveCells: { x: number; y: number; color: string }[] = [];
 
-      // Draw alive cells
-      for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
-        for (let columnIndex = 0; columnIndex < grid[0].length; columnIndex++) {
-          const cell = grid[rowIndex][columnIndex];
+      for (let row = startRow; row < endRow; row++) {
+        for (let col = startCol; col < endCol; col++) {
+          const cell = grid[row]?.[col];
+          if (!cell) continue;
 
-          // Store test attributes if needed
           if (isPlaywrightExecutionContext()) {
             const cellState = { alive: cell.alive, color: cell.color || CELL_EMPTY_COLOR };
-            context.canvas.setAttribute(
-              `data-cell-${rowIndex}-${columnIndex}`,
-              JSON.stringify(cellState),
-            );
+            context.canvas.setAttribute(`data-cell-${row}-${col}`, JSON.stringify(cellState));
           }
 
           if (cell.alive) {
-            const x = columnIndex * adjustedCellSize;
-            const y = rowIndex * adjustedCellSize;
-
-            context.fillStyle = cell.color || '#ffffff';
-            context.fillRect(x + 1, y + 1, adjustedCellSize - 1, adjustedCellSize - 1);
+            aliveCells.push({
+              x: col * adjustedCellSize,
+              y: row * adjustedCellSize,
+              color: cell.color || '#ffffff',
+            });
           }
         }
       }
+
+      // Draw all alive cells in batch
+      aliveCells.forEach(({ x, y, color }) => {
+        context.fillStyle = color;
+        context.fillRect(x + 1, y + 1, adjustedCellSize - 1, adjustedCellSize - 1);
+      });
     },
     [grid, adjustedCellSize, drawGridLines],
   );
+
+  const scheduleRedraw = useCallback(() => {
+    if (!pendingDraw.current) {
+      pendingDraw.current = true;
+      requestAnimationFrame(() => {
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext('2d', { alpha: false });
+        if (context) {
+          const viewport = getViewportRange();
+          drawVisibleCells(context, viewport);
+        }
+        pendingDraw.current = false;
+      });
+    }
+  }, [drawVisibleCells, getViewportRange]);
 
   const handleMouseDown = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -137,37 +207,47 @@ export const Grid = ({
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      const columnIndex = Math.floor(x / adjustedCellSize);
-      const rowIndex = Math.floor(y / adjustedCellSize);
+      const col = Math.floor(x / adjustedCellSize);
+      const row = Math.floor(y / adjustedCellSize);
 
-      throttledMouseDown(
-        rowIndex,
-        columnIndex,
-        setIsMouseDown,
-        onInteractionStart,
-        onCellClick,
-        lastToggledCell,
-      );
+      if (row >= 0 && row < grid.length && col >= 0 && col < grid[0].length) {
+        setIsMouseDown(true);
+        onInteractionStart();
+        onCellClick(row, col);
+        lastToggledCell.current = { row, col };
+        lastMousePosition.current = { x: event.clientX, y: event.clientY };
+      }
     },
-    [adjustedCellSize, throttledMouseDown, onInteractionStart, onCellClick],
+    [adjustedCellSize, grid, onInteractionStart, onCellClick],
   );
 
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!isMouseDown) return;
+      throttle(() => {
+        if (!isMouseDown || !lastMousePosition.current) return;
 
-      const canvas = canvasRef.current;
-      if (!canvas) return;
+        const positions = predictIntermediateCells(
+          event.clientX,
+          event.clientY,
+          lastMousePosition.current.x,
+          lastMousePosition.current.y,
+        );
 
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const columnIndex = Math.floor(x / adjustedCellSize);
-      const rowIndex = Math.floor(y / adjustedCellSize);
+        positions.forEach(({ row, col }) => {
+          if (
+            !lastToggledCell.current ||
+            lastToggledCell.current.row !== row ||
+            lastToggledCell.current.col !== col
+          ) {
+            onCellDrag(row, col);
+            lastToggledCell.current = { row, col };
+          }
+        });
 
-      throttledMouseEnter(rowIndex, columnIndex, isMouseDown, onCellDrag, lastToggledCell);
+        lastMousePosition.current = { x: event.clientX, y: event.clientY };
+      }, 4)(); // Reduced throttle time for smoother drawing
     },
-    [adjustedCellSize, isMouseDown, throttledMouseEnter, onCellDrag],
+    [isMouseDown, predictIntermediateCells, onCellDrag],
   );
 
   useEffect(() => {
@@ -177,17 +257,28 @@ export const Grid = ({
     const context = canvas.getContext('2d', { alpha: false });
     if (!context) return;
 
-    const width = grid[0].length * adjustedCellSize;
-    const height = grid.length * adjustedCellSize;
-
-    canvas.width = width;
-    canvas.height = height;
-
-    // Optimize canvas
+    canvas.width = grid[0].length * adjustedCellSize;
+    canvas.height = grid.length * adjustedCellSize;
     context.imageSmoothingEnabled = false;
 
-    drawGrid(context);
-  }, [drawGrid, grid, adjustedCellSize]);
+    if (isPlaywrightExecutionContext()) {
+      canvas.setAttribute('data-grid-size', grid.length.toString());
+    }
+
+    const handleScroll = throttle(() => {
+      scheduleRedraw();
+    }, 16);
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [grid, adjustedCellSize, scheduleRedraw]);
+
+  useEffect(() => {
+    scheduleRedraw();
+  }, [scheduleRedraw]);
 
   return (
     <div
@@ -196,10 +287,12 @@ export const Grid = ({
       onMouseUp={() => {
         setIsMouseDown(false);
         lastToggledCell.current = null;
+        lastMousePosition.current = null;
       }}
       onMouseLeave={() => {
         setIsMouseDown(false);
         lastToggledCell.current = null;
+        lastMousePosition.current = null;
       }}
       data-testid="grid-container"
     >
