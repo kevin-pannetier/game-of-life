@@ -39,7 +39,7 @@ This project implements Conway's Game of Life using React and custom hooks. The 
 
 4. Start the development server:
    ```bash
-   npm start
+   npm start dev
    ```
 
 ## Usage
