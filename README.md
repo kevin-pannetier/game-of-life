@@ -37,36 +37,16 @@ This project implements Conway's Game of Life using React and custom hooks. The 
    npm install
    ```
 
-4. Start the development server:
+4. Start the development server (for dev purpose):
    ```bash
    npm run dev
    ```
-
-## Usage
-
-### `useGameOfLife`
-
-The `useGameOfLife` hook provides the following:
-
-#### State
-
-- **`grid`**: The current grid state.
-- **`isPlaying`**: Whether the simulation is running.
-- **`generationCount`**: The current generation count.
-- **`canGoBack`**: Indicates if history can move backward.
-- **`canGoForward`**: Indicates if history can move forward.
-
-#### Actions
-
-- **`toggleCell(row, col)`**: Toggle the state of a cell.
-- **`setCell(row, col, state)`**: Set the state of a specific cell.
-- **`nextGeneration()`**: Progress to the next generation based on the rules of the Game of Life.
-- **`togglePlay()`**: Start or pause the simulation.
-- **`resetGame(size)`**: Reset the grid to an empty state with the specified size.
-- **`cleanGrid()`**: Clear all cells, setting them to an inactive state.
-- **`exportGrid()`**: Export the current grid as a JSON file.
-- **`goToPreviousGeneration()`**: Navigate to the previous generation in history.
-- **`goToNextGeneration()`**: Navigate to the next generation in history.
+   The app will be available : http://localhost:5173/
+5. Or you can also start a built version for demonstration, it's fastest and has better performance :
+   ```bash
+     npm run build && npm run preview
+   ```
+   The app will be available at : http://localhost:4173/
 
 ## Technical Stack
 
@@ -79,7 +59,7 @@ This project leverages the following technologies:
 
 ## Implementation Details
 
-- The grid is represented as a 2D array of cells, each containing an `alive` state and optional metadata such as `color`.
+- The grid is represented as a canvas based 2D array of cells, each containing an `alive` state and optional metadata such as `color`.
 - The `useGameOfLife` hook manages the grid's state, including:
   - Current grid structure.
   - History of generations for time travel.
@@ -90,8 +70,3 @@ This project leverages the following technologies:
 ## Deployment
 
 - This app is deployed automatically on Vercel and is available here : https://game-of-life-psi-red.vercel.app/
-
-## Current Issues
-
-- **Performance on Large Grids**:
-  - The simulation may slow down significantly for grid sizes larger than 100x100, a migration to a Canvas based solution was made but we still have issues to smoothly renders a 1000x1000 grid
