@@ -341,7 +341,6 @@ export async function exportGrid(page: Page): Promise<void> {
   const parsedContent = JSON.parse(content);
 
   expect(parsedContent).toHaveProperty('grid');
-  expect(Array.isArray(parsedContent.grid)).toBe(true);
 }
 
 export async function importGrid(page: Page): Promise<void> {
@@ -351,12 +350,17 @@ export async function importGrid(page: Page): Promise<void> {
 
   const tempFilePath = path.join(getDirname(), 'temp-grid.json');
   const gridData = {
-    grid: [
-      [{ alive: false }, { alive: true }, { alive: false }],
-      [{ alive: true }, { alive: false }, { alive: true }],
-      [{ alive: false }, { alive: true }, { alive: false }],
-    ],
+    grid: {
+      size: 3,
+      liveCells: [
+        [0, 1, '#FFFF00'], // Row, Col, Color
+        [1, 0, '#00FF00'],
+        [1, 2, '#FF0000'],
+        [2, 1, '#0000FF'],
+      ],
+    },
   };
+
   fs.writeFileSync(tempFilePath, JSON.stringify(gridData));
 
   try {
@@ -367,11 +371,11 @@ export async function importGrid(page: Page): Promise<void> {
     await fileInput.setInputFiles(tempFilePath);
     await page.waitForTimeout(500);
 
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 3; col++) {
-        const expectedState = gridData.grid[row][col].alive;
-        await verifyCellState(page, `${row}-${col}`, expectedState);
-      }
+    // Verify that the imported grid matches the expected state
+    for (const [row, col, color] of gridData.grid.liveCells) {
+      const state = await getCellState(page, row, col);
+      expect(state.alive).toBe(true);
+      expect(state.color).toBe(color);
     }
   } finally {
     fs.unlinkSync(tempFilePath);

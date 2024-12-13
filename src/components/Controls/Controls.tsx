@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react';
 
 import Button from '../../ui/Button/Button';
 import ButtonGroup from '../../ui/ButtonGroup/ButtonGroup';
-import { GridType } from '../Grid/types';
 import Icon from '../../ui/Icon/Icon';
 import ImportGridDialog from '../ImportGridDialog/ImportGridDialog';
 import ShortcutInfoDialog from '../ShortcutInfoDialog/ShortcutInfoDialog';
@@ -24,7 +23,7 @@ export type ControlsProps = {
   speed: number;
   onSpeedChange: (speed: number) => void;
   onExport: () => void;
-  onImport: (grid: GridType) => void;
+  onImport: (file: File) => void;
   onClean: () => void;
   setNewGameDialogOpen: (open: boolean) => void;
   onPreviousGeneration: () => void;

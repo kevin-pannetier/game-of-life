@@ -318,7 +318,8 @@ export const useGameOfLife = (initialSize: number | null = null) => {
   }, []);
 
   const exportGrid = useCallback(() => {
-    const data = { grid };
+    const compressed = compressGrid(grid);
+    const data = { grid: compressed };
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
     });
@@ -331,6 +332,34 @@ export const useGameOfLife = (initialSize: number | null = null) => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [grid]);
+
+  const importGrid = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = event => {
+      try {
+        if (event.target?.result) {
+          const parsed = JSON.parse(event.target.result as string);
+          if (parsed.grid) {
+            const decompressedGrid = decompressGrid(parsed.grid); // Use existing decompressGrid helper
+            setGrid(decompressedGrid);
+            setHistory([decompressedGrid]); // Reset history
+            setCurrentHistoryIndex(0);
+            setGenerationCount(0);
+            saveGameState({
+              grid: decompressedGrid,
+              size: decompressedGrid.length,
+              generationCount: 0,
+              history: [decompressedGrid],
+              currentHistoryIndex: 0,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to import grid:', error);
+      }
+    };
+    reader.readAsText(file);
+  }, []);
 
   const goToPreviousGeneration = useCallback(() => {
     if (currentHistoryIndex > 0) {
@@ -404,6 +433,7 @@ export const useGameOfLife = (initialSize: number | null = null) => {
   return {
     cleanGrid,
     exportGrid,
+    importGrid,
     grid,
     isPlaying,
     nextGeneration,
