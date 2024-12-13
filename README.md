@@ -87,6 +87,10 @@ This project leverages the following technologies:
 - Neighbor calculations and grid updates follow Conway's rules to determine the next generation.
 - Performance optimizations include memoized functions and conditional history updates to avoid redundant calculations.
 
+## Deployment
+
+- This app is deployed automatically on Vercel
+
 ## Current Issues
 
 - **Performance on Large Grids**:
