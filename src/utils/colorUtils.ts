@@ -9,6 +9,8 @@ export const CELL_COLORS = [
   '#800080', // Purple
 ];
 
+export const CELL_EMPTY_COLOR = '#18181B';
+
 // Get a random color from our predefined colors
 export const getRandomColor = (): string => {
   return CELL_COLORS[Math.floor(Math.random() * CELL_COLORS.length)];

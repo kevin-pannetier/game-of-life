@@ -14,7 +14,7 @@ test.describe('Game of Life', () => {
 
   test.describe('Grid and Cell UI Elements', () => {
     test('should display a grid of the correct size', async () => {
-      await verifyGridSize(page, 'grid', 9);
+      await verifyGridSize(page, 9);
     });
 
     test('should correctly toggle cell state on click', async () => {

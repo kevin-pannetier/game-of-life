@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { CELL_EMPTY_COLOR } from '../../utils/colorUtils';
 import { GridProps } from './types';
 import throttle from '../../utils/throttle';
 
@@ -61,32 +62,38 @@ export const Grid = ({
     (context: CanvasRenderingContext2D) => {
       const width = grid[0].length * cellSize;
       const height = grid.length * cellSize;
-      const darkColor = 'rgb(24 24 27 / 100%)';
 
-      // Black background
+      // Clear and set background
       context.clearRect(0, 0, width, height);
-      context.fillStyle = darkColor;
+      context.fillStyle = CELL_EMPTY_COLOR;
       context.fillRect(0, 0, width, height);
 
-      // Draw cells
+      // Draw cells and store their state as data attributes
       for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
         for (let columnIndex = 0; columnIndex < grid[0].length; columnIndex++) {
           const cell = grid[rowIndex][columnIndex];
           const x = columnIndex * cellSize;
           const y = rowIndex * cellSize;
 
-          context.fillStyle = cell.alive ? cell.color || '#fff' : darkColor;
+          // Draw cell
+          context.fillStyle = cell.alive ? cell.color || '#fff' : CELL_EMPTY_COLOR;
           context.fillRect(x, y, cellSize, cellSize);
-          context.strokeStyle = '#666'; // Grid lines
+
+          // Draw grid lines
+          context.strokeStyle = '#666';
           context.strokeRect(x, y, cellSize, cellSize);
 
-          // Add a way to test this cell
+          // Store cell state for testing
+          const cellState = { alive: cell.alive, color: cell.color || CELL_EMPTY_COLOR };
           context.canvas.setAttribute(
-            `data-testid-cell-${rowIndex}-${columnIndex}`,
-            JSON.stringify({ alive: cell.alive, color: cell.color }),
+            `data-cell-${rowIndex}-${columnIndex}`,
+            JSON.stringify(cellState),
           );
         }
       }
+
+      // Store grid size for testing
+      context.canvas.setAttribute('data-grid-size', grid.length.toString());
     },
     [grid, cellSize],
   );
@@ -139,23 +146,11 @@ export const Grid = ({
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    // Set canvas dimensions to grid dimensions
     canvas.width = grid[0].length * cellSize;
     canvas.height = grid.length * cellSize;
 
     drawGrid(context);
   }, [drawGrid, grid, cellSize]);
-
-  // Force a redraw whenever grid changes
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    drawGrid(context);
-  }, [grid, drawGrid]);
 
   return (
     <div
@@ -168,9 +163,7 @@ export const Grid = ({
         setIsMouseDown(false);
         lastToggledCell.current = null;
       }}
-      data-testid="grid-canvas"
-      aria-label="Game of Life Grid Canvas"
-      style={{ overflow: 'auto' }}
+      data-testid="grid-container"
     >
       <canvas
         ref={canvasRef}

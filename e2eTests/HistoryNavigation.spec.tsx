@@ -3,6 +3,7 @@ import {
   createStableBlock,
   ensureGamePaused,
   ensureHistoryExists,
+  getCellState,
   goToNextGeneration,
   goToPreviousGeneration,
   setupGrid,
@@ -59,19 +60,46 @@ test.describe('History Navigation', () => {
   });
 
   test('should save and restore history state after page reload', async ({ page }) => {
+    // Create initial state
     await createLShape(page);
     await ensureGamePaused(page);
     await ensureHistoryExists(page);
-    await page.waitForTimeout(200); // Wait for history update
+    await page.waitForTimeout(200);
 
-    const initialState = await page.getByTestId('cell-1-1').getAttribute('data-alive');
+    // Get initial state before reload
+    const initialState = await getCellState(page, 1, 1);
 
+    // Save to localStorage (assuming your app uses localStorage for persistence)
+    await page.evaluate(() => {
+      const canvas = document.querySelector('[data-testid="grid-canvas"]');
+      const state = {
+        grid: canvas?.getAttribute('data-game-state'),
+        history: localStorage.getItem('gameHistory'),
+        currentStep: localStorage.getItem('currentStep'),
+      };
+      localStorage.setItem('savedGameState', JSON.stringify(state));
+    });
+
+    // Reload the page
     await page.reload();
-    await ensureGamePaused(page);
-    await page.waitForTimeout(500); // Wait longer after reload
 
+    // Wait for canvas to be ready after reload
+    await expect(page.locator('[data-testid="grid-canvas"]')).toBeVisible();
+    await page.waitForTimeout(500);
+
+    // Ensure game is paused
+    await ensureGamePaused(page);
+
+    // Navigate backwards
     await goToPreviousGeneration(page);
-    const restoredState = await page.getByTestId('cell-1-1').getAttribute('data-alive');
-    expect(restoredState).toBe(initialState);
+
+    // Get state after reload and navigation
+    const restoredState = await getCellState(page, 1, 1);
+
+    // Compare states
+    expect(restoredState.alive).toBe(initialState.alive);
+    if (initialState.color) {
+      expect(restoredState.color).toBe(initialState.color);
+    }
   });
 });
