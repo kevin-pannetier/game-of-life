@@ -149,11 +149,10 @@ export const Controls = ({
             variant="outline"
             onClick={onPreviousGeneration}
             disabled={isPlaying || !canGoBack}
-            icons={{ before: ChevronLeftIcon }}
             className="mr-2"
             data-testid="previous-button"
           >
-            Previous
+            <Icon Icon={ChevronLeftIcon} size="small" />
           </Button>
 
           <Button
@@ -171,11 +170,10 @@ export const Controls = ({
             variant="outline"
             onClick={onNextGeneration}
             disabled={isPlaying || !canGoForward}
-            icons={{ before: ChevronRightIcon }}
             className="ml-2"
             data-testid="next-button"
           >
-            Next
+            <Icon Icon={ChevronRightIcon} size="small" />
           </Button>
         </div>
 
@@ -185,39 +183,35 @@ export const Controls = ({
             variant="outline"
             onClick={onExport}
             disabled={isPlaying}
-            icons={{ before: DownloadIcon }}
             data-testid="export-button"
           >
-            Export Grid
+            <Icon Icon={DownloadIcon} size="small" />
           </Button>
           <Button
             size="small"
             variant="outline"
             onClick={() => setDialogOpen(true)}
             disabled={isPlaying}
-            icons={{ before: UploadIcon }}
             data-testid="import-button"
           >
-            Import Grid
+            <Icon Icon={UploadIcon} size="small" />
           </Button>
           <Button
             size="small"
             variant="danger"
             onClick={onClean}
             disabled={isPlaying}
-            icons={{ before: TrashIcon }}
             data-testid="clean-button"
           >
-            Clean Grid
+            <Icon Icon={TrashIcon} size="small" />
           </Button>
           <Button
             size="small"
-            variant="outline"
+            variant="secondary"
             onClick={() => setShortcutDialogOpen(true)}
-            icons={{ before: QuestionMarkCircledIcon }}
             data-testid="shortcuts-button"
           >
-            Shortcuts
+            <Icon Icon={QuestionMarkCircledIcon} size="small" />
           </Button>
         </div>
       </div>

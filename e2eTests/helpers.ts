@@ -258,10 +258,10 @@ export async function createNavigableHistory(page: Page): Promise<void> {
 // Button Controls
 export async function waitForButtonEnabled(
   page: Page,
-  name: string,
+  dataTestId: string,
   timeout = DEFAULT_TIMEOUT,
 ): Promise<boolean> {
-  const button = page.getByRole('button', { name });
+  const button = page.getByTestId(dataTestId);
   try {
     await expect(button).not.toBeDisabled({ timeout });
     return true;
@@ -277,22 +277,24 @@ export async function isButtonDisabled(page: Page, name: string): Promise<boolea
 }
 
 export async function goToPreviousGeneration(page: Page): Promise<void> {
+  const buttonTestId = 'previous-button';
   await waitForHistoryReady(page);
-  const canGoBack = await waitForButtonEnabled(page, 'Previous', 2000);
+  const canGoBack = await waitForButtonEnabled(page, buttonTestId, 2000);
   if (!canGoBack) {
     throw new Error('Previous generation button remained disabled');
   }
-  await page.getByRole('button', { name: 'Previous' }).click();
+  await page.getByTestId(buttonTestId).click();
   await page.waitForTimeout(CELL_UPDATE_WAIT);
 }
 
 export async function goToNextGeneration(page: Page): Promise<void> {
+  const buttonTestId = 'next-button';
   await waitForHistoryReady(page);
-  const canGoForward = await waitForButtonEnabled(page, 'Next', 2000);
+  const canGoForward = await waitForButtonEnabled(page, buttonTestId, 2000);
   if (!canGoForward) {
     throw new Error('Next generation button remained disabled');
   }
-  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByTestId(buttonTestId).click();
   await page.waitForTimeout(CELL_UPDATE_WAIT);
 }
 

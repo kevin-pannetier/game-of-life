@@ -91,7 +91,7 @@ test.describe('Game of Life', () => {
 
     test('should clear colors when cleaning grid', async () => {
       await createStableBlock(page);
-      await page.getByRole('button', { name: 'Clean Grid' }).click();
+      await page.getByTestId('clean-button').click();
       await page.waitForTimeout(100);
 
       // Verify all cells are dead and have the background color

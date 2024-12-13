@@ -23,18 +23,18 @@ test.describe('History Navigation', () => {
   test('should disable navigation buttons initially', async ({ page }) => {
     await ensureGamePaused(page);
     // Make sure we check immediately after pausing
-    expect(await waitForButtonEnabled(page, 'Previous', 200)).toBe(false);
-    expect(await waitForButtonEnabled(page, 'Next', 200)).toBe(false);
+    expect(await waitForButtonEnabled(page, 'previous-button', 200)).toBe(false);
+    expect(await waitForButtonEnabled(page, 'next-button', 200)).toBe(false);
   });
 
   test('should not allow navigation on empty grid', async ({ page }) => {
     await createStableBlock(page);
     await ensureGamePaused(page);
-    await page.getByRole('button', { name: 'Clean Grid' }).click();
+    await page.getByTestId('clean-button').click();
 
     // Check after cleaning
-    expect(await waitForButtonEnabled(page, 'Previous', 200)).toBe(false);
-    expect(await waitForButtonEnabled(page, 'Next', 200)).toBe(false);
+    expect(await waitForButtonEnabled(page, 'previous-button', 200)).toBe(false);
+    expect(await waitForButtonEnabled(page, 'next-button', 200)).toBe(false);
   });
 
   test('should disable forward navigation at latest state', async ({ page }) => {
@@ -46,7 +46,7 @@ test.describe('History Navigation', () => {
     await goToPreviousGeneration(page);
     await goToNextGeneration(page);
 
-    expect(await waitForButtonEnabled(page, 'Next', 200)).toBe(false);
+    expect(await waitForButtonEnabled(page, 'next-button', 200)).toBe(false);
   });
 
   test('should disable backward navigation at initial state', async ({ page }) => {
@@ -56,7 +56,7 @@ test.describe('History Navigation', () => {
     await page.waitForTimeout(200); // Wait for history update
 
     await goToPreviousGeneration(page);
-    expect(await waitForButtonEnabled(page, 'Previous', 200)).toBe(false);
+    expect(await waitForButtonEnabled(page, 'previous-button', 200)).toBe(false);
   });
 
   test('should save and restore history state after page reload', async ({ page }) => {
