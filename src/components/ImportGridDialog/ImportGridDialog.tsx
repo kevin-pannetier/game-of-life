@@ -4,7 +4,7 @@ import Button from '../../ui/Button/Button';
 import Dialog from '../../ui/Dialog/Dialog';
 
 export type ImportGridDialogProps = {
-  onImport: (grid: { alive: boolean }[][]) => void;
+  onImport: (file: File) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
@@ -12,28 +12,16 @@ export type ImportGridDialogProps = {
 const ImportGridDialog = ({ onImport, open, onOpenChange }: ImportGridDialogProps) => {
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = event => {
-      try {
-        const json = JSON.parse(event.target?.result as string);
-        if (Array.isArray(json.grid)) {
-          onImport(json.grid);
-          onOpenChange(false);
-        } else {
-          setError("Invalid file format. Expected a JSON file with a 'grid' property.");
-        }
-      } catch {
-        setError('Error parsing JSON file. Please check its content.');
-      }
-    };
-    reader.readAsText(file);
-  };
-
   const handleSelectFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleFileUpload(file);
+      setError(null); // Clear any previous errors
+      try {
+        onImport(file); // Pass the file directly to the parent handler
+        onOpenChange(false); // Close the dialog after successful file selection
+      } catch {
+        setError('Failed to import file. Please check its format.');
+      }
     }
   };
 

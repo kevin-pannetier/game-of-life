@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from 'react';
 import Button from './ui/Button/Button';
 import { Controls } from './components/Controls/Controls';
 import { Grid } from './components/Grid/Grid';
-import { GridType } from './components/Grid/types';
 import NewGameDialog from './components/NewGameDialog/NewGameDialog';
 import { PlayIcon } from '@radix-ui/react-icons';
 import { useGameOfLife } from './hooks/useGameOfLife';
@@ -18,8 +17,8 @@ export const App = () => {
     togglePlay,
     nextGeneration,
     resetGame,
+    importGrid,
     exportGrid,
-    setGrid,
     cleanGrid,
     savedState,
     generationCount,
@@ -84,10 +83,6 @@ export const App = () => {
     setSpeed(newSpeed);
   }, []);
 
-  const handleImport = (importedGrid: GridType) => {
-    setGrid(importedGrid);
-  };
-
   return (
     <div className="min-h-screen bg-zinc-900 text-white flex flex-col">
       {/* Header */}
@@ -134,7 +129,7 @@ export const App = () => {
                 onSpeedChange={handleSpeedChange}
                 speed={speed}
                 onExport={exportGrid}
-                onImport={handleImport}
+                onImport={importGrid}
                 onClean={cleanGrid}
                 setNewGameDialogOpen={setDialogOpen}
                 onPreviousGeneration={goToPreviousGeneration}
