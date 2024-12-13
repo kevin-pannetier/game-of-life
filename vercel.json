@@ -3,5 +3,10 @@
     "deploymentEnabled": {
       "main": false
     }
+  },
+  "build": {
+    "env": {
+      "NODE_VERSION": "20.17.0"
+    }
   }
 }
