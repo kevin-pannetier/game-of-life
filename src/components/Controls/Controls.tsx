@@ -192,7 +192,7 @@ export const Controls = ({
               disabled={isPlaying}
               data-testid="export-button"
             >
-              <Icon Icon={DownloadIcon} size="small" />
+              <Icon Icon={UploadIcon} size="small" />
             </Button>
           </Tooltip>
 
@@ -204,7 +204,7 @@ export const Controls = ({
               disabled={isPlaying}
               data-testid="import-button"
             >
-              <Icon Icon={UploadIcon} size="small" />
+              <Icon Icon={DownloadIcon} size="small" />
             </Button>
           </Tooltip>
 

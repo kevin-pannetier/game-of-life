@@ -373,7 +373,7 @@ export async function importGrid(page: Page): Promise<void> {
 
     // Verify that the imported grid matches the expected state
     for (const [row, col, color] of gridData.grid.liveCells) {
-      const state = await getCellState(page, row, col);
+      const state = await getCellState(page, row as number, col as number);
       expect(state.alive).toBe(true);
       expect(state.color).toBe(color);
     }
