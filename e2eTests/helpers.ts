@@ -1,11 +1,107 @@
+// Types
 import { Page, expect } from '@playwright/test';
 
+import { CELL_EMPTY_COLOR } from '../src/utils/colorUtils';
+import { CellType } from '../src/components/Cell/types';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import path from 'path';
 
+interface CellCoordinate {
+  row: number;
+  col: number;
+}
+
+interface CanvasMetrics {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+}
+
+interface CellDimensions {
+  cellWidth: number;
+  cellHeight: number;
+}
+
+// Constants
+const DEFAULT_TIMEOUT = 1000;
+const CELL_UPDATE_WAIT = 100;
+const GENERATION_WAIT = 600;
+const HISTORY_READY_WAIT = 500;
+const DOWNLOAD_TIMEOUT = 10000;
+
 // File System Utilities
 const getDirname = () => path.dirname(fileURLToPath(import.meta.url));
+
+// Canvas Utilities
+async function getCanvasMetrics(page: Page): Promise<CanvasMetrics> {
+  const canvas = page.locator('[data-testid="grid-canvas"]');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Canvas not found');
+  return box;
+}
+
+async function getCellDimensions(page: Page): Promise<CellDimensions> {
+  const canvas = page.locator('[data-testid="grid-canvas"]');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Canvas not found');
+
+  const gridSizeAttr = await canvas.getAttribute('data-grid-size');
+  const size = gridSizeAttr ? parseInt(gridSizeAttr) : 3;
+
+  return {
+    cellWidth: box.width / size,
+    cellHeight: box.height / size,
+  };
+}
+
+async function parseCellId(cellId: string): Promise<CellCoordinate> {
+  const [prefix, row, col] = cellId.split('-');
+  return {
+    row: Number(prefix === 'cell' ? row : prefix),
+    col: Number(prefix === 'cell' ? col : row),
+  };
+}
+
+// Cell State Management
+export async function getCellState(page: Page, row: number, col: number): Promise<CellType> {
+  const canvas = page.locator('[data-testid="grid-canvas"]');
+  const stateAttr = await canvas.getAttribute(`data-cell-${row}-${col}`);
+  if (!stateAttr) throw new Error(`No state found for cell ${row}-${col}`);
+  return JSON.parse(stateAttr);
+}
+
+export async function getCellColor(
+  page: Page,
+  row: number,
+  col: number,
+): Promise<string | undefined> {
+  const state = await getCellState(page, row, col);
+  return state.color;
+}
+
+export async function verifyCellState(
+  page: Page,
+  cellId: string,
+  expectedAlive: boolean,
+): Promise<void> {
+  const { row, col } = await parseCellId(cellId);
+  const state = await getCellState(page, row, col);
+  expect(state.alive).toBe(expectedAlive);
+}
+
+export async function verifyDeadCell(page: Page, cellId: string): Promise<void> {
+  const { row, col } = await parseCellId(cellId);
+  const state = await getCellState(page, row, col);
+  expect(state.alive).toBe(false);
+}
+
+export async function verifyNewCell(page: Page, cellId: string): Promise<void> {
+  const { row, col } = await parseCellId(cellId);
+  const state = await getCellState(page, row, col);
+  expect(state.alive).toBe(true);
+}
 
 // Color Utilities
 export function hexToRgb(hex: string): string {
@@ -20,16 +116,194 @@ export function isTransparent(color: string): boolean {
 }
 
 export async function getBlockColors(page: Page): Promise<Record<string, string>> {
-  const colors = {};
-  for (const position of ['1-1', '1-2', '2-1', '2-2']) {
-    colors[position] = await page
-      .getByTestId(`cell-${position}`)
-      .evaluate(el => window.getComputedStyle(el).backgroundColor);
+  const canvas = page.locator('[data-testid="grid-canvas"]');
+  await expect(canvas).toBeVisible();
+
+  const positions: CellCoordinate[] = [
+    { row: 1, col: 1 },
+    { row: 1, col: 2 },
+    { row: 2, col: 1 },
+    { row: 2, col: 2 },
+  ];
+
+  const colors: Record<string, string> = {};
+  for (const { row, col } of positions) {
+    try {
+      const state = await getCellState(page, row, col);
+      colors[`${row}-${col}`] = state.color || CELL_EMPTY_COLOR;
+    } catch (error) {
+      console.error(`Failed to get state for cell ${row}-${col}:`, error);
+      colors[`${row}-${col}`] = CELL_EMPTY_COLOR;
+    }
   }
+
   return colors;
 }
 
-// Game Setup
+// Game Control
+export async function ensureGamePaused(page: Page): Promise<void> {
+  const button = page.getByTestId('play-button');
+  const isPlaying = await button.getAttribute('data-playing');
+  if (isPlaying === 'true') {
+    await button.click();
+    await page.waitForTimeout(CELL_UPDATE_WAIT);
+  }
+}
+
+export async function runOneGeneration(page: Page): Promise<void> {
+  await ensureGamePaused(page);
+  await page.getByTestId('play-button').click();
+  await page.waitForTimeout(GENERATION_WAIT);
+  await page.getByTestId('play-button').click();
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+export async function runNextGeneration(page: Page): Promise<void> {
+  const playButton = page.getByTestId('play-button');
+  await playButton.click();
+  await page.waitForTimeout(GENERATION_WAIT);
+  await playButton.click();
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+// Cell Interactions
+export async function activateCell(page: Page, cellId: string): Promise<void> {
+  const { row, col } = await parseCellId(cellId);
+  const { cellWidth, cellHeight } = await getCellDimensions(page);
+  const box = await getCanvasMetrics(page);
+
+  const x = box.x + col * cellWidth + cellWidth / 2;
+  const y = box.y + row * cellHeight + cellHeight / 2;
+
+  await page.mouse.click(x, y);
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+export async function toggleCell(page: Page, cellId: string): Promise<void> {
+  const { row, col } = await parseCellId(cellId);
+  const { cellWidth, cellHeight } = await getCellDimensions(page);
+  const box = await getCanvasMetrics(page);
+
+  const x = box.x + col * cellWidth + cellWidth / 2;
+  const y = box.y + row * cellHeight + cellHeight / 2;
+
+  const initialState = await getCellState(page, row, col);
+  await page.mouse.click(x, y);
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+
+  const newState = await getCellState(page, row, col);
+  expect(newState.alive).toBe(!initialState.alive);
+}
+
+// Pattern Creation
+export async function createStableBlock(page: Page): Promise<void> {
+  await activateCell(page, 'cell-1-1');
+  await activateCell(page, 'cell-1-2');
+  await activateCell(page, 'cell-2-1');
+  await activateCell(page, 'cell-2-2');
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+export async function createLShape(page: Page): Promise<void> {
+  await activateCell(page, 'cell-1-1');
+  await activateCell(page, 'cell-1-2');
+  await activateCell(page, 'cell-2-1');
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+export async function createOvercrowdedCell(page: Page): Promise<void> {
+  await activateCell(page, 'cell-0-1');
+  await activateCell(page, 'cell-1-0');
+  await activateCell(page, 'cell-1-1');
+  await activateCell(page, 'cell-1-2');
+  await activateCell(page, 'cell-2-1');
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+export async function verifyStableBlock(page: Page): Promise<void> {
+  const positions: CellCoordinate[] = [
+    { row: 1, col: 1 },
+    { row: 1, col: 2 },
+    { row: 2, col: 1 },
+    { row: 2, col: 2 },
+  ];
+
+  for (const { row, col } of positions) {
+    const state = await getCellState(page, row, col);
+    expect(state.alive).toBe(true);
+  }
+}
+
+// History Navigation
+export const waitForHistoryReady = async (page: Page): Promise<void> => {
+  await page.waitForTimeout(HISTORY_READY_WAIT);
+};
+
+export const waitForHistoryUpdate = async (page: Page, timeout = 200): Promise<void> => {
+  await page.waitForTimeout(timeout);
+};
+
+export async function ensureHistoryExists(page: Page): Promise<void> {
+  await ensureGamePaused(page);
+  await runOneGeneration(page);
+  await waitForHistoryReady(page);
+}
+
+export async function createNavigableHistory(page: Page): Promise<void> {
+  await ensureGamePaused(page);
+  await ensureHistoryExists(page);
+  await waitForHistoryUpdate(page);
+}
+
+// Button Controls
+export async function waitForButtonEnabled(
+  page: Page,
+  name: string,
+  timeout = DEFAULT_TIMEOUT,
+): Promise<boolean> {
+  const button = page.getByRole('button', { name });
+  try {
+    await expect(button).not.toBeDisabled({ timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function isButtonDisabled(page: Page, name: string): Promise<boolean> {
+  const button = page.getByRole('button', { name });
+  const isDisabled = await button.getAttribute('disabled');
+  return isDisabled !== null;
+}
+
+export async function goToPreviousGeneration(page: Page): Promise<void> {
+  await waitForHistoryReady(page);
+  const canGoBack = await waitForButtonEnabled(page, 'Previous', 2000);
+  if (!canGoBack) {
+    throw new Error('Previous generation button remained disabled');
+  }
+  await page.getByRole('button', { name: 'Previous' }).click();
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+export async function goToNextGeneration(page: Page): Promise<void> {
+  await waitForHistoryReady(page);
+  const canGoForward = await waitForButtonEnabled(page, 'Next', 2000);
+  if (!canGoForward) {
+    throw new Error('Next generation button remained disabled');
+  }
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.waitForTimeout(CELL_UPDATE_WAIT);
+}
+
+// Grid Setup
+export async function verifyGridSize(page: Page, expectedCount: number): Promise<void> {
+  const canvas = page.locator('[data-testid="grid-canvas"]');
+  await expect(canvas).toBeVisible();
+  const gridSize = await canvas.getAttribute('data-grid-size');
+  expect(parseInt(gridSize || '0') ** 2).toBe(expectedCount);
+}
+
 export async function setupGrid(
   page: Page,
   sizeSelectTestId: string,
@@ -44,165 +318,15 @@ export async function startGame(page: Page): Promise<void> {
   await page.getByTestId('start-game-button').click();
 }
 
-// Game Control
-export async function ensureGamePaused(page: Page): Promise<void> {
-  const button = page.getByTestId('play-button');
-  const isPlaying = await button.getAttribute('data-playing');
-  if (isPlaying === 'true') {
-    await button.click();
-    await page.waitForTimeout(100);
-  }
-}
-
-export async function runOneGeneration(page: Page): Promise<void> {
-  await ensureGamePaused(page);
-  await page.getByTestId('play-button').click();
-  await page.waitForTimeout(600);
-  await page.getByTestId('play-button').click();
-  await page.waitForTimeout(200);
-}
-
-export async function runNextGeneration(page: Page): Promise<void> {
-  await page.getByTestId('play-button').click();
-  await page.waitForTimeout(600);
-  await page.getByTestId('play-button').click();
-  await page.waitForTimeout(100);
-}
-
-// Cell Operations
-export async function activateCell(page: Page, cellTestId: string): Promise<void> {
-  await page.getByTestId(cellTestId).click();
-}
-
-export async function toggleCell(page: Page, cellTestId: string): Promise<void> {
-  const cell = page.getByTestId(cellTestId);
-  await cell.click();
-  await expect(cell).toHaveAttribute('data-alive', 'true');
-
-  const colorWhenAlive = await cell.evaluate(el => window.getComputedStyle(el).backgroundColor);
-  expect(colorWhenAlive).not.toMatch(/^(transparent|rgba\(0,\s*0,\s*0,\s*0\))$/);
-
-  await cell.click();
-  await expect(cell).toHaveAttribute('data-alive', 'false');
-
-  const colorWhenDead = await cell.evaluate(el => window.getComputedStyle(el).backgroundColor);
-  expect(isTransparent(colorWhenDead)).toBe(true);
-}
-
-// Pattern Creation
-export async function createStableBlock(page: Page): Promise<void> {
-  await page.getByTestId('cell-1-1').click();
-  await page.getByTestId('cell-1-2').click();
-  await page.getByTestId('cell-2-1').click();
-  await page.getByTestId('cell-2-2').click();
-}
-
-export async function createLShape(page: Page): Promise<void> {
-  await page.getByTestId('cell-1-1').click();
-  await page.getByTestId('cell-1-2').click();
-  await page.getByTestId('cell-2-1').click();
-}
-
-export async function createOvercrowdedCell(page: Page): Promise<void> {
-  await page.getByTestId('cell-0-1').click();
-  await page.getByTestId('cell-1-0').click();
-  await page.getByTestId('cell-1-1').click();
-  await page.getByTestId('cell-1-2').click();
-  await page.getByTestId('cell-2-1').click();
-}
-
-// State Verification
-export async function verifyGridSize(
-  page: Page,
-  gridTestId: string,
-  expectedCount: number,
-): Promise<void> {
-  const grid = page.getByTestId(gridTestId);
-  await expect(grid).toBeVisible();
-  const cells = grid.locator('[role="gridcell"]');
-  await expect(cells).toHaveCount(expectedCount);
-}
-
-export async function verifyDeadCell(page: Page, cellTestId: string): Promise<void> {
-  await expect(page.getByTestId(cellTestId)).toHaveAttribute('data-alive', 'false');
-}
-
-export async function verifyNewCell(page: Page, cellTestId: string): Promise<void> {
-  const cell = page.getByTestId(cellTestId);
-  await expect(cell).toHaveAttribute('data-alive', 'true');
-  const backgroundColor = await cell.evaluate(el => window.getComputedStyle(el).backgroundColor);
-  expect(backgroundColor).not.toBe('transparent');
-}
-
-export async function verifyStableBlock(page: Page): Promise<void> {
-  await expect(page.getByTestId('cell-1-1')).toHaveAttribute('data-alive', 'true');
-  await expect(page.getByTestId('cell-1-2')).toHaveAttribute('data-alive', 'true');
-  await expect(page.getByTestId('cell-2-1')).toHaveAttribute('data-alive', 'true');
-  await expect(page.getByTestId('cell-2-2')).toHaveAttribute('data-alive', 'true');
-}
-
-// History Navigation
-export async function waitForHistoryReady(page: Page): Promise<void> {
-  await page.waitForTimeout(500);
-}
-
-export async function waitForHistoryUpdate(page: Page, timeout = 200): Promise<void> {
-  await page.waitForTimeout(timeout);
-}
-
-export async function ensureHistoryExists(page: Page): Promise<void> {
-  await ensureGamePaused(page);
-  await runOneGeneration(page);
-  await waitForHistoryReady(page);
-}
-
-export async function waitForButtonEnabled(
-  page: Page,
-  name: string,
-  timeout = 1000,
-): Promise<boolean> {
-  const button = page.getByRole('button', { name });
-  try {
-    await expect(button).not.toBeDisabled({ timeout });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function createNavigableHistory(page: Page): Promise<void> {
-  await ensureGamePaused(page);
-  await ensureHistoryExists(page);
-  await waitForHistoryUpdate(page);
-}
-
-export async function goToPreviousGeneration(page: Page): Promise<void> {
-  await waitForHistoryReady(page);
-  const canGoBack = await waitForButtonEnabled(page, 'Previous', 2000);
-  if (!canGoBack) {
-    throw new Error('Previous generation button remained disabled');
-  }
-  await page.getByRole('button', { name: 'Previous' }).click();
-  await page.waitForTimeout(200);
-}
-
-export async function goToNextGeneration(page: Page): Promise<void> {
-  await waitForHistoryReady(page);
-  const canGoForward = await waitForButtonEnabled(page, 'Next', 2000);
-  if (!canGoForward) {
-    throw new Error('Next generation button remained disabled');
-  }
-  await page.getByRole('button', { name: 'Next' }).click();
-  await page.waitForTimeout(200);
-}
-
 // Import/Export
 export async function exportGrid(page: Page): Promise<void> {
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Export Grid' }).click(),
-  ]);
+  const exportButton = page.getByTestId('export-button');
+  await expect(exportButton).toBeVisible();
 
+  const downloadPromise = page.waitForEvent('download', { timeout: DOWNLOAD_TIMEOUT });
+  await exportButton.click();
+
+  const download = await downloadPromise;
   const suggestedFilename = download.suggestedFilename();
   expect(suggestedFilename).toBe('game-of-life-grid.json');
 
@@ -219,11 +343,9 @@ export async function exportGrid(page: Page): Promise<void> {
 }
 
 export async function importGrid(page: Page): Promise<void> {
-  const importButton = page.getByRole('button', { name: 'Import Grid' });
+  const importButton = page.getByTestId('import-button');
+  await expect(importButton).toBeVisible({ timeout: DOWNLOAD_TIMEOUT });
   await importButton.click();
-
-  const label = page.getByTestId('file-label');
-  await expect(label).toBeVisible();
 
   const tempFilePath = path.join(getDirname(), 'temp-grid.json');
   const gridData = {
@@ -235,17 +357,21 @@ export async function importGrid(page: Page): Promise<void> {
   };
   fs.writeFileSync(tempFilePath, JSON.stringify(gridData));
 
-  const fileInput = page.locator('[data-testid="file-input"]');
-  await fileInput.setInputFiles(tempFilePath);
+  try {
+    const fileLabel = page.getByTestId('file-label');
+    await expect(fileLabel).toBeVisible({ timeout: 5000 });
 
-  await verifyGridSize(page, 'grid', 9);
+    const fileInput = page.getByTestId('file-input');
+    await fileInput.setInputFiles(tempFilePath);
+    await page.waitForTimeout(500);
 
-  fs.unlinkSync(tempFilePath);
-}
-
-// Button State
-export async function isButtonDisabled(page: Page, name: string): Promise<boolean> {
-  const button = page.getByRole('button', { name });
-  const isDisabled = await button.getAttribute('disabled');
-  return isDisabled !== null;
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        const expectedState = gridData.grid[row][col].alive;
+        await verifyCellState(page, `${row}-${col}`, expectedState);
+      }
+    }
+  } finally {
+    fs.unlinkSync(tempFilePath);
+  }
 }

@@ -151,6 +151,7 @@ export const Controls = ({
             disabled={isPlaying || !canGoBack}
             icons={{ before: ChevronLeftIcon }}
             className="mr-2"
+            data-testid="previous-button"
           >
             Previous
           </Button>
@@ -172,6 +173,7 @@ export const Controls = ({
             disabled={isPlaying || !canGoForward}
             icons={{ before: ChevronRightIcon }}
             className="ml-2"
+            data-testid="next-button"
           >
             Next
           </Button>
@@ -184,6 +186,7 @@ export const Controls = ({
             onClick={onExport}
             disabled={isPlaying}
             icons={{ before: DownloadIcon }}
+            data-testid="export-button"
           >
             Export Grid
           </Button>
@@ -193,6 +196,7 @@ export const Controls = ({
             onClick={() => setDialogOpen(true)}
             disabled={isPlaying}
             icons={{ before: UploadIcon }}
+            data-testid="import-button"
           >
             Import Grid
           </Button>
@@ -202,6 +206,7 @@ export const Controls = ({
             onClick={onClean}
             disabled={isPlaying}
             icons={{ before: TrashIcon }}
+            data-testid="clean-button"
           >
             Clean Grid
           </Button>
@@ -210,6 +215,7 @@ export const Controls = ({
             variant="outline"
             onClick={() => setShortcutDialogOpen(true)}
             icons={{ before: QuestionMarkCircledIcon }}
+            data-testid="shortcuts-button"
           >
             Shortcuts
           </Button>

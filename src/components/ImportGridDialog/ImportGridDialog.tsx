@@ -45,6 +45,7 @@ const ImportGridDialog = ({ onImport, open, onOpenChange }: ImportGridDialogProp
       description="Upload a JSON file containing the grid to import. Click to select a file."
       size="medium"
       variant="info"
+      data-testid="import-dialog"
     >
       <div className="p-6 text-center">
         <input

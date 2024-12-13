@@ -14,6 +14,7 @@ export type DialogProps = {
   variant?: 'primary' | 'danger' | 'info';
   hideClose?: boolean;
   className?: string;
+  'data-testid'?: string; // Custom prop for testing
 } & DialogPrimitive.DialogProps;
 
 const Dialog = ({
@@ -54,7 +55,12 @@ const Dialog = ({
   });
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} {...props}>
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      {...props}
+      data-testid={props['data-testid']}
+    >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-md" />
         <DialogPrimitive.Content className={contentClass}>
