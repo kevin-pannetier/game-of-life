@@ -50,9 +50,9 @@ export const Controls = ({
   const [isShortcutDialogOpen, setShortcutDialogOpen] = useState(false);
 
   const speedOptions = [
-    { value: 1000, label: 'Slow' },
-    { value: 500, label: 'Fast' },
-    { value: 100, label: 'Maximum' },
+    { value: 1000, label: 'x1' },
+    { value: 500, label: 'x2' },
+    { value: 100, label: 'x3' },
   ];
 
   useEffect(() => {
