@@ -35,7 +35,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         // Variants
         'bg-zinc-700 text-white hover:bg-zinc-850 focus:ring-zinc-500': variant === 'primary',
         'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-300': variant === 'secondary',
-        'border border-gray-500 text-gray-500 hover:bg-gray-100 focus:ring-gray-300':
+        'border border-gray-500 text-white hover:text-zinc-700 hover:bg-gray-100 focus:ring-gray-300':
           variant === 'outline',
         'bg-red-500 text-white hover:bg-red-600 focus:ring-red-300': variant === 'danger',
         // Sizes
