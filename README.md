@@ -89,7 +89,7 @@ This project leverages the following technologies:
 
 ## Deployment
 
-- This app is deployed automatically on Vercel
+- This app is deployed automatically on Vercel and is available here : https://game-of-life-psi-red.vercel.app/
 
 ## Current Issues
 
