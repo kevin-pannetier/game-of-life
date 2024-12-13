@@ -90,4 +90,4 @@ This project leverages the following technologies:
 ## Current Issues
 
 - **Performance on Large Grids**:
-  - The simulation may slow down significantly for grid sizes larger than 100x100, a migration to a Canvas based solution is ongoing, to try to display a 1000x1000 grid (disabled for now)
+  - The simulation may slow down significantly for grid sizes larger than 100x100, a migration to a Canvas based solution was made but we still have issues to display a 1000x1000 grid (disabled for now)
