@@ -42,6 +42,7 @@ This project implements Conway's Game of Life using React and custom hooks. The 
    npm run dev
    ```
    The app will be available : http://localhost:5173/
+   
 5. Or you can also start a built version for demonstration, it's fastest and has better performance :
    ```bash
      npm run build && npm run preview
